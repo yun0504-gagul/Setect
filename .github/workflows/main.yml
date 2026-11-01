@@ -1,0 +1,973 @@
+name: Build SeTeukCheck APK & Web
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-app:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate App Source Files (www/index.html)
+        run: |
+          mkdir -p www
+          cat << 'EOF_HTML' > www/index.html
+          <!DOCTYPE html>
+          <html lang="ko">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+            <meta name="theme-color" content="#1e3a8a" />
+            <title>세특체크 — 과세특 중복 판별 & 심화 주제 추천 앱</title>
+            <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+            <style>
+              :root {
+                --bg: #f8fafc;
+                --surface: #ffffff;
+                --surface-subtle: #f1f5f9;
+                --border: #e2e8f0;
+                --text: #0f172a;
+                --text-muted: #475569;
+                --primary: #2563eb;
+                --primary-hover: #1d4ed8;
+                --primary-soft: #dbeafe;
+                --danger: #dc2626;
+                --danger-soft: #fef2f2;
+                --danger-border: #fecaca;
+                --warn: #d97706;
+                --warn-soft: #fffbeb;
+                --warn-border: #fde68a;
+                --safe: #059669;
+                --safe-soft: #ecfdf5;
+                --safe-border: #a7f3d0;
+                --shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
+                --radius: 14px;
+              }
+
+              * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+              body {
+                font-family: system-ui, -apple-system, 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+                background: var(--bg);
+                color: var(--text);
+                line-height: 1.6;
+                min-height: 100vh;
+                padding-bottom: 40px;
+              }
+
+              header {
+                background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+                color: #fff;
+                padding: 18px 16px;
+                position: sticky;
+                top: 0;
+                z-index: 50;
+                box-shadow: 0 2px 12px rgba(15, 23, 42, 0.2);
+              }
+              .header-inner {
+                max-width: 1160px;
+                margin: 0 auto;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-between;
+                align-items: center;
+                gap: 10px;
+              }
+              .brand { display: flex; align-items: center; gap: 10px; }
+              .brand-badge {
+                width: 36px; height: 36px; border-radius: 10px;
+                background: #3b82f6; display: flex; align-items: center; justify-content: center;
+                font-weight: 800; font-size: 17px; flex-shrink: 0;
+              }
+              .brand h1 { font-size: 18px; font-weight: 800; }
+              .brand p { font-size: 11.5px; color: #cbd5e1; }
+              .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
+              .btn {
+                display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+                padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;
+                cursor: pointer; border: 1px solid transparent; transition: 0.15s;
+              }
+              .btn-primary { background: var(--primary); color: #fff; }
+              .btn-primary:hover { background: var(--primary-hover); }
+              .btn-glass { background: rgba(255,255,255,0.14); color: #fff; border-color: rgba(255,255,255,0.22); }
+              .btn-outline { background: #fff; color: var(--text); border-color: var(--border); }
+              .btn-danger-outline { background: #fff; color: var(--danger); border-color: var(--danger-border); }
+
+              .container {
+                max-width: 1160px;
+                margin: 16px auto 40px;
+                padding: 0 14px;
+                display: grid;
+                grid-template-columns: 1.15fr 0.85fr;
+                gap: 16px;
+                align-items: start;
+              }
+              @media (max-width: 920px) { .container { grid-template-columns: 1fr; } }
+
+              .card {
+                background: var(--surface);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                box-shadow: var(--shadow);
+                padding: 16px;
+                margin-bottom: 14px;
+              }
+              .card-title {
+                font-size: 15.5px; font-weight: 700; margin-bottom: 5px;
+                display: flex; align-items: center; justify-content: space-between; gap: 8px;
+              }
+              .card-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
+
+              .search-box { display: flex; flex-direction: column; gap: 10px; }
+              .search-input-wrap { display: flex; gap: 8px; }
+              .search-input {
+                flex: 1; padding: 12px 14px; font-size: 15px;
+                border: 2px solid var(--border); border-radius: 11px; outline: none;
+              }
+              .search-input:focus { border-color: var(--primary); }
+              .search-options {
+                display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+                font-size: 12px; color: var(--text-muted);
+              }
+              .search-options select, .search-options input {
+                padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: #fff;
+              }
+
+              .verdict-card { border-radius: 12px; padding: 14px 16px; margin-top: 14px; border: 1px solid transparent; }
+              .verdict-danger { background: var(--danger-soft); border-color: var(--danger-border); color: #7f1d1d; }
+              .verdict-warn { background: var(--warn-soft); border-color: var(--warn-border); color: #78350f; }
+              .verdict-safe { background: var(--safe-soft); border-color: var(--safe-border); color: #064e3b; }
+              .verdict-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px; flex-wrap: wrap; }
+              .verdict-badge { font-weight: 800; font-size: 14px; }
+              .verdict-score { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,0.8); }
+
+              .match-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+              .match-item, .record-card {
+                background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+              }
+              .match-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+              .tag {
+                display: inline-block; padding: 2px 8px; border-radius: 6px;
+                font-size: 11px; font-weight: 700; background: var(--primary-soft); color: var(--primary);
+              }
+              .tag-grade { background: #e2e8f0; color: #334155; }
+              .match-title { font-weight: 700; font-size: 13.5px; margin-bottom: 4px; }
+              .match-content { font-size: 12.5px; color: var(--text-muted); }
+              mark.hl { background: #fef08a; color: #713f12; font-weight: 700; padding: 0 3px; border-radius: 3px; }
+
+              .suggestion-box {
+                margin-top: 14px; background: #f8fafc; border: 1px solid #cbd5e1;
+                border-radius: 12px; padding: 14px;
+              }
+              .suggestion-box h3 { font-size: 13.5px; font-weight: 800; color: #1e3a8a; margin-bottom: 9px; }
+              .suggestion-list { display: flex; flex-direction: column; gap: 8px; }
+              .suggestion-item {
+                background: #fff; border-left: 4px solid var(--primary);
+                padding: 10px 12px; border-radius: 8px;
+              }
+              .suggestion-item strong { display: block; font-size: 12.5px; margin-bottom: 2px; }
+              .suggestion-item p { font-size: 12px; color: var(--text-muted); }
+
+              .dropzone {
+                display: block; border: 2px dashed #94a3b8; border-radius: 12px;
+                padding: 18px 12px; text-align: center; background: #f8fafc;
+                cursor: pointer; transition: 0.15s; margin-bottom: 10px;
+              }
+              .dropzone:hover, .dropzone.dragover { border-color: var(--primary); background: #eff6ff; }
+              .dropzone-title { font-weight: 700; font-size: 13.5px; margin-bottom: 3px; }
+              .dropzone-sub { font-size: 11.5px; color: var(--text-muted); }
+
+              .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+              .tab-btn {
+                padding: 7px 10px; font-size: 12px; font-weight: 700; color: var(--text-muted);
+                background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer;
+              }
+              .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+              .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+              .input, .textarea {
+                width: 100%; padding: 8px 11px; border: 1px solid var(--border);
+                border-radius: 8px; font-size: 13px; font-family: inherit;
+              }
+              .textarea { min-height: 90px; resize: vertical; margin-bottom: 8px; }
+
+              .records-scroll { max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
+              .record-del { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px; }
+              .record-del:hover { color: var(--danger); }
+              .keywords-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
+              .kw-chip {
+                font-size: 11px; background: #f1f5f9; color: #475569;
+                padding: 3px 8px; border-radius: 6px; border: none; cursor: pointer;
+              }
+              .kw-chip:hover { background: var(--primary-soft); color: var(--primary); }
+              .status-toast { margin-top: 8px; font-size: 12px; color: var(--primary); font-weight: 600; }
+            </style>
+          </head>
+          <body>
+
+            <header>
+              <div class="header-inner">
+                <div class="brand">
+                  <div class="brand-badge">세</div>
+                  <div>
+                    <h1>세특체크 (SeTeuk Check)</h1>
+                    <p>과세특 파일 등록 후 주제를 치면 중복 판별 + 심화·확장 주제를 추천합니다</p>
+                  </div>
+                </div>
+                <div class="header-actions">
+                  <button class="btn btn-glass" onclick="loadSampleData()">예시 불러오기</button>
+                  <button class="btn btn-glass" onclick="exportBackupJSON()">백업 저장</button>
+                  <label class="btn btn-glass">
+                    복원
+                    <input type="file" accept=".json" style="display:none" onchange="importBackupJSON(event)" />
+                  </label>
+                </div>
+              </div>
+            </header>
+
+            <main class="container">
+              <section>
+                <div class="card">
+                  <div class="card-title">🔍 새 탐구 주제 중복 검사 & 심화 제안</div>
+                  <p class="card-desc">
+                    새로 하려는 주제를 입력하면 이미 등록된 과세특과 겹치는지 즉시 알려주고, <strong>차별화할 수 있는 심화·확장 주제</strong>를 제안합니다.
+                  </p>
+
+                  <div class="search-box">
+                    <div class="search-input-wrap">
+                      <input
+                        type="text"
+                        id="topicInput"
+                        class="search-input"
+                        placeholder="예: 인공지능 추천 알고리즘 편향성, 효소 반응 속도 실험..."
+                        onkeydown="if(event.key==='Enter') checkTopic()"
+                      />
+                      <button class="btn btn-primary" onclick="checkTopic()">검사</button>
+                    </div>
+
+                    <div class="search-options">
+                      <label>대상 과목:</label>
+                      <input type="text" id="targetSubjectInput" placeholder="예: 확률과 통계, 생명과학II" style="width:160px;" />
+                      <label>희망 계열:</label>
+                      <select id="careerTrackSelect" onchange="if(document.getElementById('topicInput').value) checkTopic()">
+                        <option value="all">전체 / 융합 계열</option>
+                        <option value="it">IT · 컴퓨터 · AI · 데이터</option>
+                        <option value="bio">의학 · 간호 · 약학 · 생명 · 화학</option>
+                        <option value="eng">기계 · 전자 · 신소재 · 공학</option>
+                        <option value="soc">경영 · 경제 · 사회 · 법학</option>
+                        <option value="hum">인문 · 교육 · 미디어 · 어문</option>
+                      </select>
+                    </div>
+
+                    <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
+                      <span style="font-size:11.5px; color:var(--text-muted);">빠른 테스트:</span>
+                      <button class="kw-chip" onclick="quickCheck('인공지능 추천 알고리즘의 윤리적 편향성')">인공지능 알고리즘 편향성</button>
+                      <button class="kw-chip" onclick="quickCheck('조건부확률과 베이즈 정리를 활용한 질병 진단')">베이즈 정리 질병 진단</button>
+                      <button class="kw-chip" onclick="quickCheck('카탈레이스 효소 반응 속도와 온도·pH 영향')">효소 반응 속도 실험</button>
+                    </div>
+                  </div>
+
+                  <div id="checkResultArea"></div>
+                </div>
+
+                <div class="card">
+                  <div class="card-title">
+                    <span>📊 내가 이미 탐구한 핵심 키워드 맵</span>
+                    <span style="font-size:11px; color:var(--text-muted); font-weight:400;">터치 시 즉시 검사</span>
+                  </div>
+                  <div id="keywordCloud" class="keywords-row"></div>
+                </div>
+              </section>
+
+              <aside>
+                <div class="card">
+                  <div class="card-title">📂 과세특 파일 등록 / 텍스트 추가</div>
+                  <p class="card-desc">
+                    엑셀(XLSX/CSV), 워드(DOCX), 생기부 PDF, 텍스트(TXT) 파일을 올리거나 생기부 원문을 그대로 붙여넣으세요. 앱 내부에 자동 저장됩니다.
+                  </p>
+
+                  <div class="tabs">
+                    <button class="tab-btn active" id="tabBtnFile" onclick="switchTab('file')">파일 업로드</button>
+                    <button class="tab-btn" id="tabBtnPaste" onclick="switchTab('paste')">텍스트 붙여넣기</button>
+                    <button class="tab-btn" id="tabBtnManual" onclick="switchTab('manual')">1건씩 입력</button>
+                  </div>
+
+                  <div id="tabPanelFile">
+                    <label class="dropzone" id="dropzone">
+                      <div class="dropzone-title">📥 터치하여 과세특 파일 선택 (여러 개 가능)</div>
+                      <div class="dropzone-sub">지원 형식: .xlsx, .xls, .csv, .pdf, .docx, .txt, .json</div>
+                      <input
+                        type="file"
+                        id="fileInput"
+                        multiple
+                        accept=".xlsx,.xls,.csv,.pdf,.docx,.txt,.md,.json"
+                        style="display:none"
+                        onchange="handleFilesSelect(event)"
+                      />
+                    </label>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                      <span style="font-size:11px; color:var(--text-muted);">* 권장 열: 학년, 과목, 주제, 내용</span>
+                      <button class="btn btn-outline" style="padding:4px 9px; font-size:11px;" onclick="downloadSampleCSV()">CSV 양식 받기</button>
+                    </div>
+                    <div id="uploadStatus" class="status-toast"></div>
+                  </div>
+
+                  <div id="tabPanelPaste" style="display:none;">
+                    <div class="form-row">
+                      <input type="text" id="bulkGradeInput" class="input" placeholder="학년/학기" value="2학년 1학기" />
+                      <input type="text" id="bulkDefaultSubj" class="input" placeholder="기본 과목명" value="교과세특" />
+                    </div>
+                    <textarea
+                      id="bulkPasteArea"
+                      class="textarea"
+                      placeholder="과목명: 세특 내용 형태로 붙여넣으면 과목별로 자동 분리됩니다.&#10;예시:&#10;수학I: 지수함수와 로그함수를 활용하여 지진 규모를 분석함.&#10;생명과학I: 카탈레이스 효소 반응 속도 실험을 수행함."
+                    ></textarea>
+                    <button class="btn btn-primary" style="width:100%;" onclick="parseAndAddBulkText()">텍스트 자동 분리 및 등록</button>
+                  </div>
+
+                  <div id="tabPanelManual" style="display:none;">
+                    <div class="form-row">
+                      <input type="text" id="manualGrade" class="input" placeholder="학년/학기 (예: 1학년 2학기)" />
+                      <input type="text" id="manualSubject" class="input" placeholder="과목명 (예: 통합과학)" />
+                    </div>
+                    <input type="text" id="manualTopic" class="input" style="margin-bottom:8px;" placeholder="핵심 탐구 주제 (비워두면 본문에서 자동 요약)" />
+                    <textarea id="manualContent" class="textarea" placeholder="과세특 본문 내용을 입력하세요."></textarea>
+                    <button class="btn btn-primary" style="width:100%;" onclick="addManualRecord()">과세특 등록하기</button>
+                  </div>
+                </div>
+
+                <div class="card">
+                  <div class="card-title">
+                    <span>📚 등록된 내 과세특 (<span id="recordCount">0</span>건)</span>
+                    <button class="btn btn-danger-outline" style="padding:4px 9px; font-size:11px;" onclick="clearAllRecords()">전체 초기화</button>
+                  </div>
+                  <input
+                    type="text"
+                    id="recordFilterInput"
+                    class="input"
+                    style="margin-bottom:10px;"
+                    placeholder="등록된 목록 내 과목/키워드 검색..."
+                    oninput="renderRecordsList()"
+                  />
+                  <div class="records-scroll" id="recordsContainer"></div>
+                </div>
+              </aside>
+            </main>
+
+            <script>
+              if (window.pdfjsLib) {
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc =
+                  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+              }
+
+              const STORAGE_KEY = 'seteuk_checker_records_v1';
+
+              const STOPWORDS = new Set([
+                '통해','대한','대해','관한','활용','활용한','활용하여','바탕으로','중심으로',
+                '탐구','탐구함','조사','조사함','발표','발표함','보고서','작성','작성함',
+                '이해','이해함','분석','분석함','설명','설명함','제시','제시함','도출',
+                '수업','시간','교과','과목','단원','개념','원리','과정','결과','모습',
+                '보임','보여줌','뛰어남','우수함','적극적','참여','태도','학생','주제',
+                '선정','선정하여','관련','연계','심화','확장','다양한','구체적','논리적'
+              ]);
+
+              const CONCEPT_CLUSTERS = [
+                ['인공지능','ai','머신러닝','딥러닝','기계학습','신경망','알고리즘','챗gpt','생성형'],
+                ['편향','편향성','윤리','공정성','차별','필터버블','확증편향'],
+                ['확률','조건부확률','베이즈','베이즈정리','통계','위양성','거짓양성','진단키트','민감도'],
+                ['효소','카탈레이스','아밀레이스','반응속도','활성화에너지','촉매','기질','온도','ph'],
+                ['유전자','dna','rna','mrna','크리스퍼','유전자가위','백신','지질나노입자','lnp'],
+                ['기후변화','탄소중립','온실가스','탄소배출','신재생에너지','탄소국경세','cbam','esg'],
+                ['지수','로그','지수함수','로그함수','리히터','데시벨','반감기'],
+                ['간호','환자','바이탈','의료','임상','돌봄','트리아제','응급']
+              ];
+
+              const SAMPLE_RECORDS = [
+                {
+                  id: 'sample-1',
+                  grade: '1학년 1학기',
+                  subject: '통합사회',
+                  topic: '인공지능 추천 알고리즘의 필터버블과 윤리적 편향성',
+                  content: '빅데이터와 인공지능 추천 알고리즘이 미디어 소비에 미치는 영향을 주제로 선정하여 필터버블과 확증편향 현상을 심층 분석함. 데이터 편향성으로 인해 발생하는 사회적 차별 사례를 조사하고 알고리즘 투명성 확보 방안을 발표함.'
+                },
+                {
+                  id: 'sample-2',
+                  grade: '1학년 2학기',
+                  subject: '통합과학',
+                  topic: '카탈레이스 효소 반응 속도에 온도와 pH가 미치는 영향 실험',
+                  content: '생체 촉매인 효소의 작용 원리를 이해하고 감자즙 속 카탈레이스를 활용하여 온도와 pH 조건에 따른 과산화수소 분해 반응 속도를 비교하는 실험을 설계함. 활성화 에너지 감소 원리와 기질 특이성을 단백질 변성과 연결하여 보고서를 작성함.'
+                },
+                {
+                  id: 'sample-3',
+                  grade: '2학년 1학기',
+                  subject: '수학I',
+                  topic: '지수함수와 로그함수를 활용한 지진 리히터 규모 및 반감기 분석',
+                  content: '지수함수와 로그함수가 자연현상을 측정하는 척도로 활용되는 원리에 호기심을 갖고 리히터 지진 규모 공식과 방사성 동위원소의 반감기 수식을 유도함.'
+                },
+                {
+                  id: 'sample-4',
+                  grade: '2학년 1학기',
+                  subject: '확률과 통계',
+                  topic: '조건부확률과 베이즈 정리를 활용한 질병 진단 키트의 정확도 분석',
+                  content: '조건부확률 단원에서 질병 유병률과 진단 키트의 민감도·특이도를 바탕으로 실제 감염 확률을 계산하는 베이즈 정리 탐구를 수행함. 유병률이 낮을 때 위양성 비율이 높아지는 역설을 수식으로 증명함.'
+                }
+              ];
+
+              let records = [];
+
+              window.addEventListener('DOMContentLoaded', () => {
+                try {
+                  const saved = localStorage.getItem(STORAGE_KEY);
+                  records = saved ? JSON.parse(saved) : [...SAMPLE_RECORDS];
+                } catch (e) {
+                  records = [...SAMPLE_RECORDS];
+                }
+                setupDragAndDrop();
+                renderAll();
+              });
+
+              function saveToStorage() {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+              }
+
+              function loadSampleData() {
+                const existing = new Set(records.map(r => r.topic));
+                SAMPLE_RECORDS.forEach(s => {
+                  if (!existing.has(s.topic)) {
+                    records.unshift({ ...s, id: 'rec-' + Date.now() + Math.random().toString(36).slice(2, 6) });
+                  }
+                });
+                saveToStorage();
+                renderAll();
+                showStatus('예시 과세특 데이터가 불러와졌습니다.');
+              }
+
+              function extractKeywords(text) {
+                if (!text) return [];
+                const cleaned = text.toLowerCase().replace(/[^\w가-힣\s]/g, ' ').replace(/\s+/g, ' ').trim();
+                const tokens = [];
+                cleaned.split(' ').forEach(tok => {
+                  if (!tok || tok.length < 2) return;
+                  let stem = tok.replace(/(에서|으로|에게|부터|까지|하는|하고|하여|적인|들의|들을|들이|은|는|이|가|을|를|의|에|와|과|로|도|만|함)$/g, '');
+                  if (stem.length < 2) stem = tok;
+                  if (!STOPWORDS.has(stem) && !STOPWORDS.has(tok) && !/^\d+$/.test(stem)) {
+                    tokens.push(stem);
+                  }
+                });
+                return Array.from(new Set(tokens));
+              }
+
+              function getCharBigrams(str) {
+                const s = (str || '').toLowerCase().replace(/\s+/g, '');
+                const bigrams = new Set();
+                for (let i = 0; i < s.length - 1; i++) bigrams.add(s.slice(i, i + 2));
+                return bigrams;
+              }
+
+              function expandConceptTerms(keywords) {
+                const expanded = new Set(keywords);
+                keywords.forEach(kw => {
+                  CONCEPT_CLUSTERS.forEach(cluster => {
+                    if (cluster.some(c => kw.includes(c) || c.includes(kw))) {
+                      cluster.forEach(c => expanded.add(c));
+                    }
+                  });
+                });
+                return expanded;
+              }
+
+              function evaluateMatch(queryText, record) {
+                const queryKeywords = extractKeywords(queryText);
+                const recordFullText = `${record.subject} ${record.topic} ${record.content}`;
+                const recordKeywords = extractKeywords(recordFullText);
+                const topicKeywords = extractKeywords(record.topic);
+
+                if (queryKeywords.length === 0) return { score: 0, matchedWords: [], clusterMatched: [] };
+
+                const matchedWords = [];
+                const topicMatchedWords = [];
+
+                queryKeywords.forEach(qkw => {
+                  if (recordKeywords.some(rkw => rkw.includes(qkw) || qkw.includes(rkw)) || recordFullText.toLowerCase().includes(qkw)) {
+                    matchedWords.push(qkw);
+                  }
+                  if (topicKeywords.some(tkw => tkw.includes(qkw) || qkw.includes(tkw)) || (record.topic || '').toLowerCase().includes(qkw)) {
+                    topicMatchedWords.push(qkw);
+                  }
+                });
+
+                const expandedQuery = expandConceptTerms(queryKeywords);
+                const clusterMatched = recordKeywords.filter(rkw => !matchedWords.includes(rkw) && expandedQuery.has(rkw));
+
+                const keywordRatio = matchedWords.length / queryKeywords.length;
+                const topicBonus = topicMatchedWords.length / queryKeywords.length;
+
+                const qBigrams = getCharBigrams(queryText);
+                const tBigrams = getCharBigrams(record.topic);
+                let bigramHits = 0;
+                qBigrams.forEach(bg => { if (tBigrams.has(bg)) bigramHits++; });
+                const bigramSim = qBigrams.size > 0 ? (2 * bigramHits) / (qBigrams.size + tBigrams.size) : 0;
+
+                let rawScore = keywordRatio * 62 + topicBonus * 23 + Math.min(clusterMatched.length * 6, 18) + bigramSim * 25;
+                if (matchedWords.length >= 2 && topicMatchedWords.length >= 2) rawScore = Math.max(rawScore, 76);
+                else if (matchedWords.length >= 3) rawScore = Math.max(rawScore, 70);
+                else if (matchedWords.length === 1 && queryKeywords.length === 1) rawScore = Math.max(rawScore, 72);
+
+                return {
+                  score: Math.min(100, Math.round(rawScore)),
+                  matchedWords: Array.from(new Set(matchedWords)),
+                  clusterMatched: Array.from(new Set(clusterMatched)).slice(0, 5)
+                };
+              }
+
+              function generateDeepeningSuggestions(queryText, topMatches, targetSubj, careerTrack) {
+                const qKeywords = extractKeywords(queryText);
+                const mainKeyword = qKeywords.slice(0, 3).join(' · ') || queryText;
+                const prevSubjects = Array.from(new Set(topMatches.map(m => m.record.subject))).join(', ');
+                const nextSubjLabel = targetSubj ? `[${targetSubj}]` : '후속 과목';
+
+                const suggestions = [];
+                if (topMatches.length > 0) {
+                  suggestions.push({
+                    title: `① [수리·데이터 심화] 기존 '${prevSubjects}' 탐구를 수학적 모델링·실증 데이터로 검증`,
+                    desc: `이미 ${prevSubjects}에서 '${mainKeyword}'의 개념을 다루었다면, ${nextSubjLabel}에서는 실제 통계 데이터셋 분석, 수식 유도, 또는 시뮬레이션 오차율 검증으로 주제를 한 단계 격상하세요.`
+                  });
+                } else {
+                  suggestions.push({
+                    title: `① [탐구 설계 고도화] '${mainKeyword}'의 원리 분석 + 실제 데이터 비교`,
+                    desc: `단순 개념 정리에 그치지 않도록 '${mainKeyword}'의 핵심 메커니즘을 교과 단원 개념과 연결한 뒤, 실제 논문·통계 자료나 실험 대조군 데이터를 비교 분석하는 구조로 설계하세요.`
+                  });
+                }
+
+                const trackMap = {
+                  it: {
+                    title: `② [IT·AI 확장] '${mainKeyword}' 문제 해결을 위한 알고리즘 최적화 및 코드 구현`,
+                    desc: `기존 탐구에서 문제 현상을 짚었다면, 이번에는 Python 시뮬레이션, 가중치 보정 수식(Loss Function 설계), 또는 정확도·연산량 트레이드오프 실험으로 기술적 해법을 제시해 보세요.`
+                  },
+                  bio: {
+                    title: `② [의학·간호·생명·화학 심화] 임상/분자 수준의 작용 기전 및 변인별 정량 비교`,
+                    desc: `거시적인 현상 탐구를 넘어 분자 결합 구조, 체내 약물 반감기 수식, 환자 분류(트리아제) 프로토콜 기준, 또는 저해제·농도 변인에 따른 반응 속도 비교로 깊이 있게 확장해 보세요.`
+                  },
+                  eng: {
+                    title: `② [공학·신소재 심화] 에너지 효율 한계 극복을 위한 공정 변수 및 물성 비교`,
+                    desc: `이론적 원리가 실제 산업에 적용될 때 발생하는 열손실·내구성·수율 문제를 정의하고, 대체 소재나 구조 설계를 통한 정량적 개선 방안을 탐구해 보세요.`
+                  },
+                  soc: {
+                    title: `② [경제·정책·사회 확장] '${mainKeyword}' 도입의 비용·편익 분석과 제도적 보완책`,
+                    desc: `현상 설명에서 나아가 시장 실패 요인, 외부효과, 정보 비대칭성, 또는 해외 규제 사례와 국내 법제도 비교 분석으로 시야를 넓혀 보세요.`
+                  },
+                  hum: {
+                    title: `② [인문·윤리·미디어 확장] 딜레마 상황에서의 윤리적 판단 기준과 담론 프레임 분석`,
+                    desc: `이해관계자가 충돌하는 구체적 딜레마 사례를 설정하고, 윤리적 관점이나 미디어 프레임 비교를 통해 규범적 가이드라인을 도출해 보세요.`
+                  },
+                  all: {
+                    title: `② [한계점 극복 & 역발상 탐구] '${mainKeyword}'의 예외 조건(한계점)과 최신 대안 분석`,
+                    desc: `기존 세특에서 기본 작동 원리를 다뤘다면, 이번에는 반대로 '작동하지 않는 예외 조건(병목 현상, 오차 발생 요인)'을 집중 분석하고 이를 보완하는 대안 기술을 비교해 보세요.`
+                  }
+                };
+
+                suggestions.push(trackMap[careerTrack] || trackMap.all);
+                suggestions.push({
+                  title: `③ [생기부 스토리라인 연결 팁] 중복이 아닌 '심화 연계'로 평가받는 문구 작성법`,
+                  desc: `초안 첫 문장에 "이전 교과에서 다룬 [${mainKeyword}]의 한계점을 보완하고자 ${nextSubjLabel}의 교과 개념을 적용하여 후속 심화 탐구를 수행함"이라고 명시하면 전공 적합성과 탐구 지속성에서 높은 평가를 받습니다.`
+                });
+
+                return suggestions;
+              }
+
+              function checkTopic() {
+                const query = document.getElementById('topicInput').value.trim();
+                const targetSubj = document.getElementById('targetSubjectInput').value.trim();
+                const careerTrack = document.getElementById('careerTrackSelect').value;
+                const resultArea = document.getElementById('checkResultArea');
+
+                if (!query) { resultArea.innerHTML = ''; return; }
+
+                const evaluated = records
+                  .map(rec => ({ record: rec, ...evaluateMatch(query, rec) }))
+                  .filter(item => item.score >= 18)
+                  .sort((a, b) => b.score - a.score);
+
+                const topScore = evaluated.length > 0 ? evaluated[0].score : 0;
+
+                let verdictClass = 'verdict-safe';
+                let badgeText = '✅ 신규 탐구 가능 (겹치지 않는 새로운 주제입니다)';
+                let summaryText = `등록된 ${records.length}건의 과세특과 비교한 결과, 중복되는 주제가 발견되지 않았습니다.`;
+
+                if (topScore >= 65) {
+                  verdictClass = 'verdict-danger';
+                  badgeText = '🚨 이미 진행한 주제입니다! (높은 중복 감지)';
+                  summaryText = `기존 과세특(${evaluated[0].record.grade} ${evaluated[0].record.subject})과 핵심 주제가 크게 겹칩니다. 아래의 심화·확장 제안으로 차별화하세요.`;
+                } else if (topScore >= 32) {
+                  verdictClass = 'verdict-warn';
+                  badgeText = '⚠️ 유사 소재/키워드 이력 있음 (심화 연계 추천)';
+                  summaryText = `관련된 소재나 키워드를 다룬 이력이 있습니다. 이전 탐구에서 한 단계 나아간 '후속 심화 탐구'로 연결해 보세요.`;
+                }
+
+                const suggestions = generateDeepeningSuggestions(query, evaluated.slice(0, 2), targetSubj, careerTrack);
+
+                const matchesHtml = evaluated.length > 0 ? `
+                  <div class="match-list">
+                    ${evaluated.slice(0, 4).map(item => {
+                      const hlTerms = [...item.matchedWords, ...item.clusterMatched];
+                      return `
+                        <div class="match-item">
+                          <div class="match-meta">
+                            <div>
+                              <span class="tag tag-grade">${escapeHtml(item.record.grade)}</span>
+                              <span class="tag">${escapeHtml(item.record.subject)}</span>
+                            </div>
+                            <strong style="font-size:12px; color:${item.score >= 65 ? 'var(--danger)' : 'var(--warn)'};">유사도 ${item.score}%</strong>
+                          </div>
+                          <div class="match-title">${highlightText(item.record.topic, hlTerms)}</div>
+                          <div class="match-content">${highlightText(item.record.content, hlTerms)}</div>
+                        </div>
+                      `;
+                    }).join('')}
+                  </div>
+                ` : '';
+
+                const suggestionsHtml = `
+                  <div class="suggestion-box">
+                    <h3>💡 겹치지 않게 차별화하는 심화·확장 주제 제안</h3>
+                    <div class="suggestion-list">
+                      ${suggestions.map(s => `
+                        <div class="suggestion-item">
+                          <strong>${escapeHtml(s.title)}</strong>
+                          <p>${escapeHtml(s.desc)}</p>
+                        </div>
+                      `).join('')}
+                    </div>
+                  </div>
+                `;
+
+                resultArea.innerHTML = `
+                  <div class="verdict-card ${verdictClass}">
+                    <div class="verdict-header">
+                      <span class="verdict-badge">${badgeText}</span>
+                      <span class="verdict-score">최대 중복도 ${topScore}%</span>
+                    </div>
+                    <p style="font-size:13px;">${summaryText}</p>
+                  </div>
+                  ${matchesHtml}
+                  ${suggestionsHtml}
+                `;
+              }
+
+              function quickCheck(text) {
+                document.getElementById('topicInput').value = text;
+                checkTopic();
+              }
+
+              function highlightText(text, terms) {
+                if (!text || !terms || terms.length === 0) return escapeHtml(text);
+                let safe = escapeHtml(text);
+                [...terms].filter(t => t.length >= 2).sort((a, b) => b.length - a.length).forEach(term => {
+                  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                  safe = safe.replace(new RegExp(`(${escaped})`, 'gi'), '<mark class="hl">$1</mark>');
+                });
+                return safe;
+              }
+
+              function switchTab(mode) {
+                ['file', 'paste', 'manual'].forEach(m => {
+                  const cap = m.charAt(0).toUpperCase() + m.slice(1);
+                  document.getElementById('tabBtn' + cap).classList.toggle('active', m === mode);
+                  document.getElementById('tabPanel' + cap).style.display = m === mode ? 'block' : 'none';
+                });
+              }
+
+              function setupDragAndDrop() {
+                const dz = document.getElementById('dropzone');
+                ['dragenter', 'dragover'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.add('dragover'); }));
+                ['dragleave', 'drop'].forEach(evt => dz.addEventListener(evt, e => { e.preventDefault(); dz.classList.remove('dragover'); }));
+                dz.addEventListener('drop', e => {
+                  if (e.dataTransfer.files?.length) processUploadedFiles(e.dataTransfer.files);
+                });
+              }
+
+              function handleFilesSelect(e) {
+                if (e.target.files?.length) processUploadedFiles(e.target.files);
+                e.target.value = '';
+              }
+
+              async function processUploadedFiles(fileList) {
+                let totalAdded = 0;
+                showStatus('파일 분석 중...');
+                for (const file of fileList) {
+                  const ext = file.name.split('.').pop().toLowerCase();
+                  try {
+                    if (['xlsx', 'xls', 'csv'].includes(ext)) totalAdded += await parseExcelOrCSVFile(file);
+                    else if (ext === 'pdf') totalAdded += await parsePDFFile(file);
+                    else if (ext === 'docx') totalAdded += await parseDocxFile(file);
+                    else if (ext === 'json') {
+                      const arr = JSON.parse(await file.text());
+                      if (Array.isArray(arr)) arr.forEach(i => { addRecordObject(i.grade, i.subject, i.topic, i.content); totalAdded++; });
+                    } else {
+                      totalAdded += parseBulkTextToRecords(await file.text(), '파일등록', file.name.replace(/\.[^.]+$/, ''));
+                    }
+                  } catch (err) {
+                    showStatus(`오류 (${file.name}): ${err.message}`);
+                  }
+                }
+                saveToStorage();
+                renderAll();
+                showStatus(`✅ 총 ${totalAdded}건의 과세특이 등록되었습니다.`);
+                if (document.getElementById('topicInput').value) checkTopic();
+              }
+
+              async function parseExcelOrCSVFile(file) {
+                if (!window.XLSX) return parseBulkTextToRecords(await file.text(), 'CSV', '교과세특');
+                const wb = window.XLSX.read(await file.arrayBuffer(), { type: 'array' });
+                let added = 0;
+                wb.SheetNames.forEach(name => {
+                  const rows = window.XLSX.utils.sheet_to_json(wb.Sheets[name], { defval: '' });
+                  rows.forEach(row => {
+                    const keys = Object.keys(row);
+                    const getCol = cands => {
+                      const k = keys.find(key => cands.some(c => key.toLowerCase().includes(c)));
+                      return k ? String(row[k]).trim() : '';
+                    };
+                    const grade = getCol(['학년', '학기', 'grade']) || name;
+                    const subject = getCol(['과목', '교과', 'subject']) || '교과세특';
+                    const topic = getCol(['주제', '제목', '활동', 'topic']);
+                    const content = getCol(['내용', '세특', '특기사항', '본문', 'content']) ||
+                      Object.values(row).map(v => String(v).trim()).filter(v => v.length > 15).join(' ');
+                    if (content || topic) { addRecordObject(grade, subject, topic, content || topic); added++; }
+                  });
+                });
+                return added;
+              }
+
+              async function parsePDFFile(file) {
+                const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+                let text = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                  const page = await pdf.getPage(i);
+                  const content = await page.getTextContent();
+                  text += content.items.map(it => it.str).join(' ') + '\n';
+                }
+                return parseBulkTextToRecords(text, 'PDF등록', '생기부PDF');
+              }
+
+              async function parseDocxFile(file) {
+                const res = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
+                return parseBulkTextToRecords(res.value, '워드등록', '과세특문서');
+              }
+
+              function parseBulkTextToRecords(rawText, defaultGrade, defaultSubject) {
+                const lines = (rawText || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+                const subjRegex = /^(?:\[([^\]]+)\]|([가-힣A-Za-z0-9\sⅠⅡⅢIV·]{2,18})\s*[:：\-])\s*(.+)$/;
+                let currentSubj = defaultSubject || '교과세특';
+                let buffer = [];
+                let added = 0;
+
+                const flush = () => {
+                  const combined = buffer.join(' ').trim();
+                  if (combined.length >= 8) { addRecordObject(defaultGrade, currentSubj, '', combined); added++; }
+                  buffer = [];
+                };
+
+                lines.forEach(line => {
+                  const m = line.match(subjRegex);
+                  if (m) { flush(); currentSubj = (m[1] || m[2]).trim(); buffer.push(m[3].trim()); }
+                  else buffer.push(line);
+                });
+                flush();
+                return added;
+              }
+
+              function parseAndAddBulkText() {
+                const text = document.getElementById('bulkPasteArea').value;
+                const grade = document.getElementById('bulkGradeInput').value.trim() || '기타';
+                const subj = document.getElementById('bulkDefaultSubj').value.trim() || '교과세특';
+                if (!text.trim()) return alert('내용을 입력해 주세요.');
+                const count = parseBulkTextToRecords(text, grade, subj);
+                document.getElementById('bulkPasteArea').value = '';
+                saveToStorage();
+                renderAll();
+                showStatus(`✅ ${count}건의 과세특이 등록되었습니다.`);
+              }
+
+              function addManualRecord() {
+                const grade = document.getElementById('manualGrade').value.trim() || '기타';
+                const subject = document.getElementById('manualSubject').value.trim() || '교과세특';
+                const topic = document.getElementById('manualTopic').value.trim();
+                const content = document.getElementById('manualContent').value.trim();
+                if (!content && !topic) return alert('주제나 내용을 입력해 주세요.');
+                addRecordObject(grade, subject, topic, content || topic);
+                document.getElementById('manualTopic').value = '';
+                document.getElementById('manualContent').value = '';
+                saveToStorage();
+                renderAll();
+              }
+
+              function addRecordObject(grade, subject, topic, content) {
+                const cleanContent = (content || '').trim();
+                let cleanTopic = (topic || '').trim();
+                if (!cleanTopic && cleanContent) {
+                  const first = cleanContent.split(/[.?!。]|함\.|음\./)[0].trim();
+                  cleanTopic = first.length > 50 ? first.slice(0, 50) + '...' : first;
+                }
+                records.unshift({
+                  id: 'rec-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
+                  grade: grade || '학년미상',
+                  subject: subject || '교과세특',
+                  topic: cleanTopic,
+                  content: cleanContent
+                });
+              }
+
+              function deleteRecord(id) {
+                records = records.filter(r => r.id !== id);
+                saveToStorage();
+                renderAll();
+                if (document.getElementById('topicInput').value) checkTopic();
+              }
+
+              function clearAllRecords() {
+                if (!confirm('등록된 모든 과세특을 초기화하시겠습니까?')) return;
+                records = [];
+                saveToStorage();
+                renderAll();
+                document.getElementById('checkResultArea').innerHTML = '';
+              }
+
+              function renderAll() {
+                renderRecordsList();
+                renderKeywordCloud();
+              }
+
+              function renderRecordsList() {
+                document.getElementById('recordCount').textContent = records.length;
+                const filter = (document.getElementById('recordFilterInput')?.value || '').trim().toLowerCase();
+                const filtered = records.filter(r =>
+                  !filter ||
+                  (r.subject || '').toLowerCase().includes(filter) ||
+                  (r.topic || '').toLowerCase().includes(filter) ||
+                  (r.content || '').toLowerCase().includes(filter)
+                );
+
+                const container = document.getElementById('recordsContainer');
+                if (filtered.length === 0) {
+                  container.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">등록된 과세특이 없습니다.</div>`;
+                  return;
+                }
+
+                container.innerHTML = filtered.map(rec => {
+                  const kws = extractKeywords(rec.topic + ' ' + rec.content).slice(0, 5);
+                  return `
+                    <div class="record-card">
+                      <div class="match-meta">
+                        <div>
+                          <span class="tag tag-grade">${escapeHtml(rec.grade)}</span>
+                          <span class="tag">${escapeHtml(rec.subject)}</span>
+                        </div>
+                        <button class="record-del" onclick="deleteRecord('${rec.id}')">✕ 삭제</button>
+                      </div>
+                      <div class="match-title" style="cursor:pointer;" onclick="quickCheck('${escapeJs(rec.topic)}')">${escapeHtml(rec.topic)}</div>
+                      <div class="match-content">${escapeHtml(rec.content)}</div>
+                      <div class="keywords-row">
+                        ${kws.map(k => `<button class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">#${escapeHtml(k)}</button>`).join('')}
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+              }
+
+              function renderKeywordCloud() {
+                const freq = {};
+                records.forEach(r => extractKeywords(`${r.topic} ${r.content}`).forEach(k => { freq[k] = (freq[k] || 0) + 1; }));
+                const top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 24);
+                const cloud = document.getElementById('keywordCloud');
+                cloud.innerHTML = top.length
+                  ? top.map(([k, c]) => `<button class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">#${escapeHtml(k)} (${c})</button>`).join('')
+                  : `<span style="font-size:12.5px; color:var(--text-muted);">과세특을 등록하면 주요 키워드가 표시됩니다.</span>`;
+              }
+
+              function exportBackupJSON() {
+                const blob = new Blob([JSON.stringify(records, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `seteuk_backup_${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+              }
+
+              async function importBackupJSON(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                try {
+                  const data = JSON.parse(await file.text());
+                  if (Array.isArray(data)) { records = data; saveToStorage(); renderAll(); }
+                } catch (err) { alert('유효한 JSON 파일이 아닙니다.'); }
+                e.target.value = '';
+              }
+
+              function downloadSampleCSV() {
+                const csv = '\uFEFF학년,과목,주제,내용\n1학년 1학기,통합사회,인공지능 추천 알고리즘의 윤리적 편향성,"빅데이터와 인공지능 추천 알고리즘이 미디어 소비에 미치는 영향을 분석함."\n';
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+                a.download = '과세특_등록양식.csv';
+                a.click();
+              }
+
+              function showStatus(msg) {
+                const el = document.getElementById('uploadStatus');
+                el.textContent = msg;
+                setTimeout(() => { if (el.textContent === msg) el.textContent = ''; }, 4000);
+              }
+
+              function escapeHtml(s) {
+                return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+              }
+              function escapeJs(s) {
+                return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+              }
+            </script>
+          </body>
+          </html>
+          EOF_HTML
+          cp www/index.html index.html
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Build Android APK via Capacitor 6
+        run: |
+          npm init -y
+          npm install @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6
+          npx cap init "SeTeukCheck" "com.seteukcheck.app" --web-dir www
+          npx cap add android
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload Android APK Artifact (app-debug.apk)
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Upload Web App Artifact (index.html)
+        uses: actions/upload-artifact@v4
+        with:
+          name: seteuk-checker-web
+          path: www/index.html
