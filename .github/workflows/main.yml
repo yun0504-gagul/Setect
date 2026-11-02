@@ -26,9 +26,13 @@ jobs:
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <meta name="theme-color" content="#1e3a8a" />
             <title>세특체크 — 과세특 중복 판별 & 심화 주제 추천 앱</title>
+            <!-- 다중 파일 파서 (Excel, DOCX, PDF, HWP/HWPX) -->
             <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/cfb@1.2.2/cfb.min.js"></script>
+            <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
             <style>
               :root {
                 --bg: #f8fafc;
@@ -66,7 +70,7 @@ jobs:
               header {
                 background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
                 color: #fff;
-                padding: 18px 16px;
+                padding: 20px 16px;
                 position: sticky;
                 top: 0;
                 z-index: 50;
@@ -79,21 +83,21 @@ jobs:
                 flex-wrap: wrap;
                 justify-content: space-between;
                 align-items: center;
-                gap: 10px;
+                gap: 12px;
               }
-              .brand { display: flex; align-items: center; gap: 10px; }
+              .brand { display: flex; align-items: center; gap: 11px; }
               .brand-badge {
-                width: 36px; height: 36px; border-radius: 10px;
+                width: 38px; height: 38px; border-radius: 10px;
                 background: #3b82f6; display: flex; align-items: center; justify-content: center;
-                font-weight: 800; font-size: 17px; flex-shrink: 0;
+                font-weight: 800; font-size: 18px; flex-shrink: 0;
               }
-              .brand h1 { font-size: 18px; font-weight: 800; }
-              .brand p { font-size: 11.5px; color: #cbd5e1; }
+              .brand h1 { font-size: 19px; font-weight: 800; }
+              .brand p { font-size: 12px; color: #cbd5e1; }
               .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
               .btn {
                 display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-                padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 600;
+                padding: 8px 13px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
                 cursor: pointer; border: 1px solid transparent; transition: 0.15s;
               }
               .btn-primary { background: var(--primary); color: #fff; }
@@ -104,11 +108,11 @@ jobs:
 
               .container {
                 max-width: 1160px;
-                margin: 16px auto 40px;
+                margin: 18px auto 40px;
                 padding: 0 14px;
                 display: grid;
                 grid-template-columns: 1.15fr 0.85fr;
-                gap: 16px;
+                gap: 18px;
                 align-items: start;
               }
               @media (max-width: 920px) { .container { grid-template-columns: 1fr; } }
@@ -118,14 +122,14 @@ jobs:
                 border: 1px solid var(--border);
                 border-radius: var(--radius);
                 box-shadow: var(--shadow);
-                padding: 16px;
-                margin-bottom: 14px;
+                padding: 18px;
+                margin-bottom: 16px;
               }
               .card-title {
-                font-size: 15.5px; font-weight: 700; margin-bottom: 5px;
+                font-size: 16px; font-weight: 700; margin-bottom: 6px;
                 display: flex; align-items: center; justify-content: space-between; gap: 8px;
               }
-              .card-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 12px; }
+              .card-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 13px; }
 
               .search-box { display: flex; flex-direction: column; gap: 10px; }
               .search-input-wrap { display: flex; gap: 8px; }
@@ -136,46 +140,46 @@ jobs:
               .search-input:focus { border-color: var(--primary); }
               .search-options {
                 display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
-                font-size: 12px; color: var(--text-muted);
+                font-size: 12.5px; color: var(--text-muted);
               }
               .search-options select, .search-options input {
-                padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 12px; background: #fff;
+                padding: 6px 9px; border: 1px solid var(--border); border-radius: 8px; font-size: 12.5px; background: #fff;
               }
 
-              .verdict-card { border-radius: 12px; padding: 14px 16px; margin-top: 14px; border: 1px solid transparent; }
+              .verdict-card { border-radius: 12px; padding: 15px 16px; margin-top: 14px; border: 1px solid transparent; }
               .verdict-danger { background: var(--danger-soft); border-color: var(--danger-border); color: #7f1d1d; }
               .verdict-warn { background: var(--warn-soft); border-color: var(--warn-border); color: #78350f; }
               .verdict-safe { background: var(--safe-soft); border-color: var(--safe-border); color: #064e3b; }
               .verdict-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; gap: 8px; flex-wrap: wrap; }
-              .verdict-badge { font-weight: 800; font-size: 14px; }
+              .verdict-badge { font-weight: 800; font-size: 14.5px; }
               .verdict-score { font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: rgba(255,255,255,0.8); }
 
               .match-list { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
               .match-item, .record-card {
-                background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 12px;
+                background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 13px;
               }
               .match-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
               .tag {
                 display: inline-block; padding: 2px 8px; border-radius: 6px;
-                font-size: 11px; font-weight: 700; background: var(--primary-soft); color: var(--primary);
+                font-size: 11.5px; font-weight: 700; background: var(--primary-soft); color: var(--primary);
               }
               .tag-grade { background: #e2e8f0; color: #334155; }
-              .match-title { font-weight: 700; font-size: 13.5px; margin-bottom: 4px; }
-              .match-content { font-size: 12.5px; color: var(--text-muted); }
+              .match-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+              .match-content { font-size: 13px; color: var(--text-muted); }
               mark.hl { background: #fef08a; color: #713f12; font-weight: 700; padding: 0 3px; border-radius: 3px; }
 
               .suggestion-box {
                 margin-top: 14px; background: #f8fafc; border: 1px solid #cbd5e1;
                 border-radius: 12px; padding: 14px;
               }
-              .suggestion-box h3 { font-size: 13.5px; font-weight: 800; color: #1e3a8a; margin-bottom: 9px; }
-              .suggestion-list { display: flex; flex-direction: column; gap: 8px; }
+              .suggestion-box h3 { font-size: 14px; font-weight: 800; color: #1e3a8a; margin-bottom: 9px; }
+              .suggestion-list { display: flex; flex-direction: column; gap: 9px; }
               .suggestion-item {
                 background: #fff; border-left: 4px solid var(--primary);
                 padding: 10px 12px; border-radius: 8px;
               }
-              .suggestion-item strong { display: block; font-size: 12.5px; margin-bottom: 2px; }
-              .suggestion-item p { font-size: 12px; color: var(--text-muted); }
+              .suggestion-item strong { display: block; font-size: 13px; margin-bottom: 2px; }
+              .suggestion-item p { font-size: 12.5px; color: var(--text-muted); }
 
               .dropzone {
                 display: block; border: 2px dashed #94a3b8; border-radius: 12px;
@@ -188,7 +192,7 @@ jobs:
 
               .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
               .tab-btn {
-                padding: 7px 10px; font-size: 12px; font-weight: 700; color: var(--text-muted);
+                padding: 7px 10px; font-size: 12.5px; font-weight: 700; color: var(--text-muted);
                 background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer;
               }
               .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
@@ -200,34 +204,39 @@ jobs:
               }
               .textarea { min-height: 90px; resize: vertical; margin-bottom: 8px; }
 
-              .records-scroll { max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 9px; }
-              .record-del { background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px; }
+              .records-scroll {
+                max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+              }
+              .record-del {
+                background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px; font-weight: 700;
+              }
               .record-del:hover { color: var(--danger); }
+
               .keywords-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
               .kw-chip {
-                font-size: 11px; background: #f1f5f9; color: #475569;
-                padding: 3px 8px; border-radius: 6px; border: none; cursor: pointer;
+                font-size: 11px; padding: 3px 8px; border-radius: 999px;
+                background: var(--surface-subtle); color: #334155; cursor: pointer; border: 1px solid var(--border);
               }
               .kw-chip:hover { background: var(--primary-soft); color: var(--primary); }
-              .status-toast { margin-top: 8px; font-size: 12px; color: var(--primary); font-weight: 600; }
+
+              .status-toast { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 6px; min-height: 18px; }
             </style>
           </head>
           <body>
-
             <header>
               <div class="header-inner">
                 <div class="brand">
                   <div class="brand-badge">세</div>
                   <div>
                     <h1>세특체크 (SeTeuk Check)</h1>
-                    <p>과세특 파일 등록 후 주제를 치면 중복 판별 + 심화·확장 주제를 추천합니다</p>
+                    <p>과세특 파일 등록 · 주제 중복 판별 · 계열별 심화 확장 추천</p>
                   </div>
                 </div>
                 <div class="header-actions">
-                  <button class="btn btn-glass" onclick="loadSampleData()">예시 불러오기</button>
-                  <button class="btn btn-glass" onclick="exportBackupJSON()">백업 저장</button>
-                  <label class="btn btn-glass">
-                    복원
+                  <button class="btn btn-glass" onclick="loadSampleData()">✨ 예시 불러오기</button>
+                  <button class="btn btn-glass" onclick="exportBackupJSON()">💾 JSON 백업</button>
+                  <label class="btn btn-glass" style="cursor:pointer;">
+                    📂 백업 복원
                     <input type="file" accept=".json" style="display:none" onchange="importBackupJSON(event)" />
                   </label>
                 </div>
@@ -235,11 +244,14 @@ jobs:
             </header>
 
             <main class="container">
+              <!-- 좌측: 주제 중복 검사 및 심화 추천 -->
               <section>
                 <div class="card">
-                  <div class="card-title">🔍 새 탐구 주제 중복 검사 & 심화 제안</div>
+                  <div class="card-title">
+                    <span>🔍 새 탐구 주제 중복 검사 & 심화 추천</span>
+                  </div>
                   <p class="card-desc">
-                    새로 하려는 주제를 입력하면 이미 등록된 과세특과 겹치는지 즉시 알려주고, <strong>차별화할 수 있는 심화·확장 주제</strong>를 제안합니다.
+                    새로 계획 중인 보고서·발표 주제를 입력하면 등록된 과세특 전체와 비교해 중복 여부를 알려주고, 겹치지 않는 후속 심화 주제를 제안합니다.
                   </p>
 
                   <div class="search-box">
@@ -256,7 +268,7 @@ jobs:
 
                     <div class="search-options">
                       <label>대상 과목:</label>
-                      <input type="text" id="targetSubjectInput" placeholder="예: 확률과 통계, 생명과학II" style="width:160px;" />
+                      <input type="text" id="targetSubjectInput" placeholder="예: 확률과 통계, 생명과학II" style="width:165px;" />
                       <label>희망 계열:</label>
                       <select id="careerTrackSelect" onchange="if(document.getElementById('topicInput').value) checkTopic()">
                         <option value="all">전체 / 융합 계열</option>
@@ -282,17 +294,18 @@ jobs:
                 <div class="card">
                   <div class="card-title">
                     <span>📊 내가 이미 탐구한 핵심 키워드 맵</span>
-                    <span style="font-size:11px; color:var(--text-muted); font-weight:400;">터치 시 즉시 검사</span>
+                    <span style="font-size:11.5px; color:var(--text-muted); font-weight:400;">터치 시 즉시 검사</span>
                   </div>
                   <div id="keywordCloud" class="keywords-row"></div>
                 </div>
               </section>
 
+              <!-- 우측: 파일 등록 및 과세특 목록 -->
               <aside>
                 <div class="card">
                   <div class="card-title">📂 과세특 파일 등록 / 텍스트 추가</div>
                   <p class="card-desc">
-                    엑셀(XLSX/CSV), 워드(DOCX), 생기부 PDF, 텍스트(TXT) 파일을 올리거나 생기부 원문을 그대로 붙여넣으세요. 앱 내부에 자동 저장됩니다.
+                    한글(HWP/HWPX), 엑셀(XLSX/CSV), 워드(DOCX), 생기부 PDF, 텍스트(TXT) 파일을 올리거나 생기부 원문을 그대로 붙여넣으세요. 기기 내부에 자동 저장됩니다.
                   </p>
 
                   <div class="tabs">
@@ -301,26 +314,28 @@ jobs:
                     <button class="tab-btn" id="tabBtnManual" onclick="switchTab('manual')">1건씩 입력</button>
                   </div>
 
+                  <!-- 탭 1: 파일 업로드 -->
                   <div id="tabPanelFile">
                     <label class="dropzone" id="dropzone">
                       <div class="dropzone-title">📥 터치하여 과세특 파일 선택 (여러 개 가능)</div>
-                      <div class="dropzone-sub">지원 형식: .xlsx, .xls, .csv, .pdf, .docx, .txt, .json</div>
+                      <div class="dropzone-sub">지원 형식: .hwp, .hwpx, .xlsx, .xls, .csv, .pdf, .docx, .txt, .json</div>
                       <input
                         type="file"
                         id="fileInput"
                         multiple
-                        accept=".xlsx,.xls,.csv,.pdf,.docx,.txt,.md,.json"
+                        accept=".hwp,.hwpx,.xlsx,.xls,.csv,.pdf,.docx,.txt,.md,.json"
                         style="display:none"
                         onchange="handleFilesSelect(event)"
                       />
                     </label>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <span style="font-size:11px; color:var(--text-muted);">* 권장 열: 학년, 과목, 주제, 내용</span>
-                      <button class="btn btn-outline" style="padding:4px 9px; font-size:11px;" onclick="downloadSampleCSV()">CSV 양식 받기</button>
+                      <span style="font-size:11.5px; color:var(--text-muted);">* 한글(.hwp/.hwpx) 표·본문 자동 추출 지원</span>
+                      <button class="btn btn-outline" style="padding:4px 9px; font-size:11.5px;" onclick="downloadSampleCSV()">CSV 양식 받기</button>
                     </div>
                     <div id="uploadStatus" class="status-toast"></div>
                   </div>
 
+                  <!-- 탭 2: 텍스트 일괄 붙여넣기 -->
                   <div id="tabPanelPaste" style="display:none;">
                     <div class="form-row">
                       <input type="text" id="bulkGradeInput" class="input" placeholder="학년/학기" value="2학년 1학기" />
@@ -334,6 +349,7 @@ jobs:
                     <button class="btn btn-primary" style="width:100%;" onclick="parseAndAddBulkText()">텍스트 자동 분리 및 등록</button>
                   </div>
 
+                  <!-- 탭 3: 직접 입력 -->
                   <div id="tabPanelManual" style="display:none;">
                     <div class="form-row">
                       <input type="text" id="manualGrade" class="input" placeholder="학년/학기 (예: 1학년 2학기)" />
@@ -348,7 +364,7 @@ jobs:
                 <div class="card">
                   <div class="card-title">
                     <span>📚 등록된 내 과세특 (<span id="recordCount">0</span>건)</span>
-                    <button class="btn btn-danger-outline" style="padding:4px 9px; font-size:11px;" onclick="clearAllRecords()">전체 초기화</button>
+                    <button class="btn btn-danger-outline" style="padding:4px 9px; font-size:11.5px;" onclick="clearAllRecords()">전체 초기화</button>
                   </div>
                   <input
                     type="text"
@@ -709,6 +725,8 @@ jobs:
                     if (['xlsx', 'xls', 'csv'].includes(ext)) totalAdded += await parseExcelOrCSVFile(file);
                     else if (ext === 'pdf') totalAdded += await parsePDFFile(file);
                     else if (ext === 'docx') totalAdded += await parseDocxFile(file);
+                    else if (ext === 'hwpx') totalAdded += await parseHwpxFile(file);
+                    else if (ext === 'hwp') totalAdded += await parseHwpFile(file);
                     else if (ext === 'json') {
                       const arr = JSON.parse(await file.text());
                       if (Array.isArray(arr)) arr.forEach(i => { addRecordObject(i.grade, i.subject, i.topic, i.content); totalAdded++; });
@@ -725,6 +743,140 @@ jobs:
                 if (document.getElementById('topicInput').value) checkTopic();
               }
 
+              // 1) 한글 표준 포맷(.hwpx) 파서 — ZIP 내부 Contents/section*.xml 본문 및 표 추출
+              async function parseHwpxFile(file) {
+                if (!window.JSZip) throw new Error('JSZip 라이브러리를 불러오지 못했습니다.');
+                const zip = await window.JSZip.loadAsync(await file.arrayBuffer());
+                const sectionFiles = Object.keys(zip.files)
+                  .filter(name => /^Contents\/section\d+\.xml$/i.test(name) || (/\.xml$/i.test(name) && name.toLowerCase().includes('section')))
+                  .sort();
+
+                let extractedLines = [];
+                const parser = new DOMParser();
+
+                for (const path of sectionFiles) {
+                  const xmlStr = await zip.files[path].async('string');
+                  const xmlDoc = parser.parseFromString(xmlStr, 'text/xml');
+                  const paragraphs = Array.from(xmlDoc.getElementsByTagName('*')).filter(el => el.localName === 'p');
+                  if (paragraphs.length > 0) {
+                    paragraphs.forEach(p => {
+                      const texts = Array.from(p.getElementsByTagName('*'))
+                        .filter(el => el.localName === 't')
+                        .map(t => t.textContent || '')
+                        .join('');
+                      if (texts.trim()) extractedLines.push(texts.trim());
+                    });
+                  } else {
+                    const plain = xmlStr.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+                    if (plain) extractedLines.push(plain);
+                  }
+                }
+
+                const fullText = extractedLines.join('\n');
+                if (!fullText.trim()) throw new Error('HWPX 파일에서 텍스트를 찾지 못했습니다.');
+                return parseBulkTextToRecords(fullText, '한글(HWPX)', file.name.replace(/\.[^.]+$/, ''));
+              }
+
+              // 2) 구형 한글 포맷(.hwp, HWP 5.0 OLE 복합문서) 파서 — BodyText/Section 및 PrvText 디코딩
+              async function parseHwpFile(file) {
+                const buf = new Uint8Array(await file.arrayBuffer());
+
+                // 확장자는 .hwp지만 실제로는 ZIP 기반 .hwpx인 경우 자동 처리
+                if (buf[0] === 0x50 && buf[1] === 0x4B) {
+                  return await parseHwpxFile(file);
+                }
+
+                if (!window.CFB) throw new Error('HWP 파서(CFB)를 불러오지 못했습니다.');
+                const cfb = window.CFB.read(buf, { type: 'array' });
+
+                let compressed = true;
+                const fileHeaderEntry = window.CFB.find(cfb, 'FileHeader');
+                if (fileHeaderEntry && fileHeaderEntry.content && fileHeaderEntry.content.length >= 40) {
+                  const flags = fileHeaderEntry.content[36];
+                  compressed = (flags & 0x01) !== 0;
+                }
+
+                const paragraphs = [];
+
+                // BodyText/Section0, Section1 ... 스트림에서 HWPTAG_PARA_TEXT (Tag ID 67) 추출
+                const sectionEntries = (cfb.FileIndex || []).filter(e => e.name && /^Section\d+$/i.test(e.name));
+                for (const entry of sectionEntries) {
+                  try {
+                    let raw = entry.content instanceof Uint8Array ? entry.content : new Uint8Array(entry.content || []);
+                    if (!raw.length) continue;
+                    if (compressed && window.pako) {
+                      try {
+                        raw = window.pako.inflateRaw(raw);
+                      } catch (e1) {
+                        try { raw = window.pako.inflate(raw); } catch (e2) {}
+                      }
+                    }
+                    const sectionParas = extractHwpSectionText(raw);
+                    if (sectionParas.length) paragraphs.push(...sectionParas);
+                  } catch (secErr) {}
+                }
+
+                // PrvText(미리보기 텍스트 UTF-16LE) 보조 추출
+                const prvEntry = window.CFB.find(cfb, 'PrvText');
+                if (paragraphs.length === 0 && prvEntry && prvEntry.content) {
+                  const u8 = prvEntry.content instanceof Uint8Array ? prvEntry.content : new Uint8Array(prvEntry.content);
+                  const prvText = new TextDecoder('utf-16le').decode(u8).replace(/\u0000/g, '').trim();
+                  if (prvText) paragraphs.push(prvText);
+                }
+
+                const combinedText = paragraphs.join('\n').trim();
+                if (!combinedText) throw new Error('암호화되었거나 텍스트를 추출할 수 없는 HWP 파일입니다.');
+                return parseBulkTextToRecords(combinedText, '한글(HWP)', file.name.replace(/\.[^.]+$/, ''));
+              }
+
+              // HWP 5.0 레코드 스트림에서 HWPTAG_PARA_TEXT(Tag 67) UTF-16LE 문자열 디코딩
+              function extractHwpSectionText(u8) {
+                const result = [];
+                const view = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+                let offset = 0;
+
+                while (offset + 4 <= u8.byteLength) {
+                  const header = view.getUint32(offset, true);
+                  offset += 4;
+                  const tagId = header & 0x3FF;
+                  let size = (header >>> 20) & 0xFFF;
+
+                  if (size === 0xFFF) {
+                    if (offset + 4 > u8.byteLength) break;
+                    size = view.getUint32(offset, true);
+                    offset += 4;
+                  }
+                  if (offset + size > u8.byteLength) break;
+
+                  // 67 = HWPTAG_PARA_TEXT
+                  if (tagId === 67 && size >= 2) {
+                    let text = '';
+                    let pos = offset;
+                    const end = offset + size;
+                    while (pos + 2 <= end) {
+                      const code = view.getUint16(pos, true);
+                      pos += 2;
+                      if (code === 0) break;
+                      if (code < 32) {
+                        if ([1, 2, 3, 11, 12, 14, 15, 16, 17, 18, 21, 22, 23].includes(code)) {
+                          pos += 14;
+                        } else if ([4, 5, 6, 7, 8, 9, 19, 20].includes(code)) {
+                          pos += 14;
+                        } else if (code === 10 || code === 13) {
+                          text += '\n';
+                        }
+                        continue;
+                      }
+                      text += String.fromCharCode(code);
+                    }
+                    const cleaned = text.replace(/\s+/g, ' ').trim();
+                    if (cleaned) result.push(cleaned);
+                  }
+                  offset += size;
+                }
+                return result;
+              }
+
               async function parseExcelOrCSVFile(file) {
                 if (!window.XLSX) return parseBulkTextToRecords(await file.text(), 'CSV', '교과세특');
                 const wb = window.XLSX.read(await file.arrayBuffer(), { type: 'array' });
@@ -739,8 +891,8 @@ jobs:
                     };
                     const grade = getCol(['학년', '학기', 'grade']) || name;
                     const subject = getCol(['과목', '교과', 'subject']) || '교과세특';
-                    const topic = getCol(['주제', '제목', '활동', 'topic']);
-                    const content = getCol(['내용', '세특', '특기사항', '본문', 'content']) ||
+                    const topic = getCol(['주제', '제목', '탐구', 'topic', 'title']);
+                    const content = getCol(['내용', '세특', '세부능력', '특기사항', '본문', 'content']) ||
                       Object.values(row).map(v => String(v).trim()).filter(v => v.length > 15).join(' ');
                     if (content || topic) { addRecordObject(grade, subject, topic, content || topic); added++; }
                   });
