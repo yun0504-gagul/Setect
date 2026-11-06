@@ -25,7 +25,7 @@ jobs:
             <meta charset="UTF-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
             <meta name="theme-color" content="#1e3a8a" />
-            <title>세특체크 — 과세특 중복 판별 & 심화 주제 추천 앱</title>
+            <title>세특체크 — 과목별 과세특 등록 · 통합 열람 · 핵심 키워드 중복 검사</title>
             <!-- 다중 파일 파서 (Excel, DOCX, PDF, HWP/HWPX) -->
             <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
             <script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
@@ -70,20 +70,20 @@ jobs:
               header {
                 background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
                 color: #fff;
-                padding: 20px 16px;
+                padding: 18px 16px;
                 position: sticky;
                 top: 0;
                 z-index: 50;
                 box-shadow: 0 2px 12px rgba(15, 23, 42, 0.2);
               }
               .header-inner {
-                max-width: 1160px;
+                max-width: 1180px;
                 margin: 0 auto;
                 display: flex;
                 flex-wrap: wrap;
                 justify-content: space-between;
                 align-items: center;
-                gap: 12px;
+                gap: 10px;
               }
               .brand { display: flex; align-items: center; gap: 11px; }
               .brand-badge {
@@ -91,13 +91,13 @@ jobs:
                 background: #3b82f6; display: flex; align-items: center; justify-content: center;
                 font-weight: 800; font-size: 18px; flex-shrink: 0;
               }
-              .brand h1 { font-size: 19px; font-weight: 800; }
-              .brand p { font-size: 12px; color: #cbd5e1; }
+              .brand h1 { font-size: 18.5px; font-weight: 800; }
+              .brand p { font-size: 11.5px; color: #cbd5e1; }
               .header-actions { display: flex; gap: 6px; flex-wrap: wrap; }
 
               .btn {
                 display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-                padding: 8px 13px; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+                padding: 8px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;
                 cursor: pointer; border: 1px solid transparent; transition: 0.15s;
               }
               .btn-primary { background: var(--primary); color: #fff; }
@@ -107,15 +107,15 @@ jobs:
               .btn-danger-outline { background: #fff; color: var(--danger); border-color: var(--danger-border); }
 
               .container {
-                max-width: 1160px;
+                max-width: 1180px;
                 margin: 18px auto 40px;
                 padding: 0 14px;
                 display: grid;
-                grid-template-columns: 1.15fr 0.85fr;
+                grid-template-columns: 1.1fr 0.9fr;
                 gap: 18px;
                 align-items: start;
               }
-              @media (max-width: 920px) { .container { grid-template-columns: 1fr; } }
+              @media (max-width: 940px) { .container { grid-template-columns: 1fr; } }
 
               .card {
                 background: var(--surface);
@@ -126,10 +126,33 @@ jobs:
                 margin-bottom: 16px;
               }
               .card-title {
-                font-size: 16px; font-weight: 700; margin-bottom: 6px;
-                display: flex; align-items: center; justify-content: space-between; gap: 8px;
+                font-size: 16px; font-weight: 800; margin-bottom: 6px;
+                display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;
               }
               .card-desc { font-size: 12.5px; color: var(--text-muted); margin-bottom: 13px; }
+
+              .subject-selector-box {
+                background: #f8fafc;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 12px;
+                margin-bottom: 12px;
+              }
+              .subject-selector-label {
+                font-size: 12px; font-weight: 800; color: #1e3a8a; margin-bottom: 7px;
+                display: flex; align-items: center; justify-content: space-between;
+              }
+              .preset-chips {
+                display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 9px;
+              }
+              .preset-chip {
+                font-size: 11.5px; padding: 4px 9px; border-radius: 999px;
+                background: #fff; color: #334155; border: 1px solid var(--border);
+                cursor: pointer; font-weight: 600; transition: 0.12s;
+              }
+              .preset-chip.active, .preset-chip:hover {
+                background: var(--primary); color: #fff; border-color: var(--primary);
+              }
 
               .search-box { display: flex; flex-direction: column; gap: 10px; }
               .search-input-wrap { display: flex; gap: 8px; }
@@ -158,14 +181,14 @@ jobs:
               .match-item, .record-card {
                 background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 13px;
               }
-              .match-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 5px; }
+              .match-meta { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
               .tag {
                 display: inline-block; padding: 2px 8px; border-radius: 6px;
                 font-size: 11.5px; font-weight: 700; background: var(--primary-soft); color: var(--primary);
               }
               .tag-grade { background: #e2e8f0; color: #334155; }
-              .match-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-              .match-content { font-size: 13px; color: var(--text-muted); }
+              .match-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #0f172a; }
+              .match-content { font-size: 13px; color: var(--text-muted); white-space: pre-line; }
               mark.hl { background: #fef08a; color: #713f12; font-weight: 700; padding: 0 3px; border-radius: 3px; }
 
               .suggestion-box {
@@ -183,7 +206,7 @@ jobs:
 
               .dropzone {
                 display: block; border: 2px dashed #94a3b8; border-radius: 12px;
-                padding: 18px 12px; text-align: center; background: #f8fafc;
+                padding: 16px 12px; text-align: center; background: #f8fafc;
                 cursor: pointer; transition: 0.15s; margin-bottom: 10px;
               }
               .dropzone:hover, .dropzone.dragover { border-color: var(--primary); background: #eff6ff; }
@@ -202,24 +225,75 @@ jobs:
                 width: 100%; padding: 8px 11px; border: 1px solid var(--border);
                 border-radius: 8px; font-size: 13px; font-family: inherit;
               }
-              .textarea { min-height: 90px; resize: vertical; margin-bottom: 8px; }
+              .textarea { min-height: 88px; resize: vertical; margin-bottom: 8px; }
+
+              .view-mode-bar {
+                display: flex; gap: 5px; background: var(--surface-subtle);
+                padding: 4px; border-radius: 10px; margin-bottom: 10px;
+              }
+              .view-mode-btn {
+                flex: 1; padding: 6px 8px; font-size: 12px; font-weight: 700;
+                border: none; border-radius: 7px; cursor: pointer;
+                background: transparent; color: var(--text-muted); transition: 0.15s;
+              }
+              .view-mode-btn.active {
+                background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(15,23,42,0.08);
+              }
+
+              .subject-filter-bar {
+                display: flex; gap: 5px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 10px;
+              }
+              .subj-filter-chip {
+                font-size: 11.5px; padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+                border: 1px solid var(--border); background: #fff; color: var(--text-muted);
+                cursor: pointer; font-weight: 700;
+              }
+              .subj-filter-chip.active {
+                background: #1e3a8a; color: #fff; border-color: #1e3a8a;
+              }
 
               .records-scroll {
-                max-height: 440px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;
+                max-height: 540px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px;
               }
+              .merged-doc-box {
+                background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px;
+              }
+              .merged-subj-section {
+                background: #fff; border: 1px solid var(--border); border-radius: 10px;
+                padding: 13px; margin-bottom: 10px;
+              }
+              .merged-subj-section:last-child { margin-bottom: 0; }
+              .merged-subj-header {
+                display: flex; align-items: center; justify-content: space-between;
+                border-bottom: 1px solid var(--surface-subtle); padding-bottom: 7px; margin-bottom: 8px;
+              }
+              .merged-subj-title {
+                font-size: 14.5px; font-weight: 800; color: #1e3a8a; display: flex; align-items: center; gap: 6px;
+              }
+              .merged-entry {
+                padding: 7px 0; border-bottom: 1px dashed #e2e8f0; font-size: 13px;
+              }
+              .merged-entry:last-child { border-bottom: none; padding-bottom: 0; }
+
               .record-del {
-                background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 12px; font-weight: 700;
+                background: none; border: none; color: #94a3b8; cursor: pointer; font-size: 11.5px; font-weight: 700;
               }
               .record-del:hover { color: var(--danger); }
 
               .keywords-row { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 7px; }
               .kw-chip {
-                font-size: 11px; padding: 3px 8px; border-radius: 999px;
-                background: var(--surface-subtle); color: #334155; cursor: pointer; border: 1px solid var(--border);
+                display: inline-flex; align-items: center; gap: 4px;
+                font-size: 11.5px; padding: 3px 9px; border-radius: 999px;
+                background: var(--surface-subtle); color: #1e293b; cursor: pointer; border: 1px solid var(--border);
+                font-weight: 600;
               }
-              .kw-chip:hover { background: var(--primary-soft); color: var(--primary); }
+              .kw-chip:hover { background: var(--primary-soft); color: var(--primary); border-color: #93c5fd; }
+              .kw-chip-del {
+                font-size: 10px; color: #94a3b8; padding-left: 2px; font-weight: 800;
+              }
+              .kw-chip-del:hover { color: var(--danger); }
 
-              .status-toast { font-size: 12px; color: var(--primary); font-weight: 600; margin-top: 6px; min-height: 18px; }
+              .status-toast { font-size: 12px; color: var(--primary); font-weight: 700; margin-top: 6px; min-height: 18px; }
             </style>
           </head>
           <body>
@@ -229,7 +303,7 @@ jobs:
                   <div class="brand-badge">세</div>
                   <div>
                     <h1>세특체크 (SeTeuk Check)</h1>
-                    <p>과세특 파일 등록 · 주제 중복 판별 · 계열별 심화 확장 추천</p>
+                    <p>과목별 추가 · 전체 통합 열람 · 핵심 학술 키워드 선별 & 중복 검사</p>
                   </div>
                 </div>
                 <div class="header-actions">
@@ -244,14 +318,14 @@ jobs:
             </header>
 
             <main class="container">
-              <!-- 좌측: 주제 중복 검사 및 심화 추천 -->
+              <!-- 좌측: 주제 중복 검사 및 핵심 학술 키워드 맵 -->
               <section>
                 <div class="card">
                   <div class="card-title">
                     <span>🔍 새 탐구 주제 중복 검사 & 심화 추천</span>
                   </div>
                   <p class="card-desc">
-                    새로 계획 중인 보고서·발표 주제를 입력하면 등록된 과세특 전체와 비교해 중복 여부를 알려주고, 겹치지 않는 후속 심화 주제를 제안합니다.
+                    새로 계획 중인 보고서·발표 주제를 입력하면 과목별로 등록된 모든 과세특을 합쳐서 비교하고, 겹치지 않는 심화 주제를 추천합니다.
                   </p>
 
                   <div class="search-box">
@@ -260,15 +334,15 @@ jobs:
                         type="text"
                         id="topicInput"
                         class="search-input"
-                        placeholder="예: 인공지능 추천 알고리즘 편향성, 효소 반응 속도 실험..."
+                        placeholder="예: 인공지능 추천 알고리즘 편향성, 카탈레이스 효소 반응 속도..."
                         onkeydown="if(event.key==='Enter') checkTopic()"
                       />
                       <button class="btn btn-primary" onclick="checkTopic()">검사</button>
                     </div>
 
                     <div class="search-options">
-                      <label>대상 과목:</label>
-                      <input type="text" id="targetSubjectInput" placeholder="예: 확률과 통계, 생명과학II" style="width:165px;" />
+                      <label>작성 예정 과목:</label>
+                      <input type="text" id="targetSubjectInput" placeholder="예: 확률과 통계, 생명과학II" style="width:160px;" />
                       <label>희망 계열:</label>
                       <select id="careerTrackSelect" onchange="if(document.getElementById('topicInput').value) checkTopic()">
                         <option value="all">전체 / 융합 계열</option>
@@ -282,43 +356,64 @@ jobs:
 
                     <div style="display:flex; gap:5px; flex-wrap:wrap; align-items:center;">
                       <span style="font-size:11.5px; color:var(--text-muted);">빠른 테스트:</span>
-                      <button class="kw-chip" onclick="quickCheck('인공지능 추천 알고리즘의 윤리적 편향성')">인공지능 알고리즘 편향성</button>
-                      <button class="kw-chip" onclick="quickCheck('조건부확률과 베이즈 정리를 활용한 질병 진단')">베이즈 정리 질병 진단</button>
-                      <button class="kw-chip" onclick="quickCheck('카탈레이스 효소 반응 속도와 온도·pH 영향')">효소 반응 속도 실험</button>
+                      <button class="kw-chip" onclick="quickCheck('인공지능 추천 알고리즘의 필터버블과 편향성')">인공지능 알고리즘 편향성</button>
+                      <button class="kw-chip" onclick="quickCheck('조건부확률과 베이즈 정리를 활용한 진단 키트')">베이즈 정리 진단 키트</button>
+                      <button class="kw-chip" onclick="quickCheck('카탈레이스 효소 반응 속도와 활성화 에너지')">카탈레이스 효소 반응</button>
                     </div>
                   </div>
 
                   <div id="checkResultArea"></div>
                 </div>
 
+                <!-- 쓸모 있는 학술 키워드만 모아둔 카드 -->
                 <div class="card">
                   <div class="card-title">
-                    <span>📊 내가 이미 탐구한 핵심 키워드 맵</span>
-                    <span style="font-size:11.5px; color:var(--text-muted); font-weight:400;">터치 시 즉시 검사</span>
+                    <span>🎯 추출된 핵심 학술 키워드 (쓸모 있는 키워드만 선별)</span>
+                    <button class="btn btn-outline" style="padding:3px 8px; font-size:11px;" onclick="resetIgnoredKeywords()">숨긴 키워드 복원</button>
+                  </div>
+                  <p class="card-desc" style="margin-bottom:8px;">
+                    일반 서술어(탐구함, 이해함, 모둠활동 등)는 자동 제외하고 <strong>교과 개념·전문 용어·실험/이론 키워드</strong>만 추출합니다. 필요 없는 단어는 <strong>✕</strong>를 눌러 영구 제외하거나 직접 추가할 수 있습니다.
+                  </p>
+                  <div style="display:flex; gap:6px; margin-bottom:10px;">
+                    <input type="text" id="customKeywordInput" class="input" placeholder="중요 키워드 직접 추가 (예: 베이즈정리, 카탈레이스)" onkeydown="if(event.key==='Enter') addCustomKeyword()" />
+                    <button class="btn btn-outline" style="white-space:nowrap;" onclick="addCustomKeyword()">+ 키워드 추가</button>
                   </div>
                   <div id="keywordCloud" class="keywords-row"></div>
                 </div>
               </section>
 
-              <!-- 우측: 파일 등록 및 과세특 목록 -->
+              <!-- 우측: 과목별 추가 및 통합 열람 -->
               <aside>
                 <div class="card">
-                  <div class="card-title">📂 과세특 파일 등록 / 텍스트 추가</div>
+                  <div class="card-title">📂 과목별 과세특 추가 (파일 · 텍스트 · 직접 입력)</div>
                   <p class="card-desc">
-                    한글(HWP/HWPX), 엑셀(XLSX/CSV), 워드(DOCX), 생기부 PDF, 텍스트(TXT) 파일을 올리거나 생기부 원문을 그대로 붙여넣으세요. 기기 내부에 자동 저장됩니다.
+                    위에서 <strong>등록할 과목(및 학년)</strong>을 선택한 뒤 한글(HWP/HWPX)·엑셀·PDF·워드 파일을 올리거나 텍스트를 입력하면 해당 과목으로 차곡차곡 추가됩니다.
                   </p>
 
+                  <!-- 공통 과목/학년 지정 박스 -->
+                  <div class="subject-selector-box">
+                    <div class="subject-selector-label">
+                      <span>📌 1단계: 추가할 과목 선택 또는 직접 입력</span>
+                      <span style="font-size:11px; color:var(--text-muted); font-weight:500;">파일/텍스트 등록 시 이 과목으로 들어가요</span>
+                    </div>
+                    <div class="preset-chips" id="presetSubjectChips"></div>
+                    <div class="form-row" style="margin-bottom:0;">
+                      <input type="text" id="activeGradeInput" class="input" placeholder="학년/학기 (예: 2학년 1학기)" value="2학년 1학기" />
+                      <input type="text" id="activeSubjectInput" class="input" placeholder="과목명 직접 입력 (예: 생명과학I)" value="통합과학" oninput="syncPresetHighlight()" />
+                    </div>
+                  </div>
+
                   <div class="tabs">
-                    <button class="tab-btn active" id="tabBtnFile" onclick="switchTab('file')">파일 업로드</button>
-                    <button class="tab-btn" id="tabBtnPaste" onclick="switchTab('paste')">텍스트 붙여넣기</button>
-                    <button class="tab-btn" id="tabBtnManual" onclick="switchTab('manual')">1건씩 입력</button>
+                    <button class="tab-btn active" id="tabBtnFile" onclick="switchTab('file')">파일 업로드 (HWP 등)</button>
+                    <button class="tab-btn" id="tabBtnManual" onclick="switchTab('manual')">과목별 직접 추가</button>
+                    <button class="tab-btn" id="tabBtnPaste" onclick="switchTab('paste')">여러 과목 일괄 붙여넣기</button>
                   </div>
 
                   <!-- 탭 1: 파일 업로드 -->
                   <div id="tabPanelFile">
                     <label class="dropzone" id="dropzone">
-                      <div class="dropzone-title">📥 터치하여 과세특 파일 선택 (여러 개 가능)</div>
-                      <div class="dropzone-sub">지원 형식: .hwp, .hwpx, .xlsx, .xls, .csv, .pdf, .docx, .txt, .json</div>
+                      <div class="dropzone-title">📥 터치하여 선택한 과목으로 과세특 파일 추가</div>
+                      <div class="dropzone-sub">한글(.hwp, .hwpx), 엑셀(.xlsx, .csv), PDF, 워드(.docx), TXT 모두 지원</div>
                       <input
                         type="file"
                         id="fileInput"
@@ -328,50 +423,60 @@ jobs:
                         onchange="handleFilesSelect(event)"
                       />
                     </label>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                      <span style="font-size:11.5px; color:var(--text-muted);">* 한글(.hwp/.hwpx) 표·본문 자동 추출 지원</span>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+                      <label style="font-size:11.5px; color:var(--text-muted); display:flex; align-items:center; gap:4px; cursor:pointer;">
+                        <input type="checkbox" id="useSelectedSubjectForFile" checked />
+                        파일 내용을 위에서 선택한 과목(<strong><span id="currentSubjLabel">통합과학</span></strong>)으로 등록
+                      </label>
                       <button class="btn btn-outline" style="padding:4px 9px; font-size:11.5px;" onclick="downloadSampleCSV()">CSV 양식 받기</button>
                     </div>
                     <div id="uploadStatus" class="status-toast"></div>
                   </div>
 
-                  <!-- 탭 2: 텍스트 일괄 붙여넣기 -->
+                  <!-- 탭 2: 과목별 직접 입력 -->
+                  <div id="tabPanelManual" style="display:none;">
+                    <input type="text" id="manualTopic" class="input" style="margin-bottom:8px;" placeholder="핵심 탐구 주제 (비워두면 본문에서 핵심 문장 자동 추출)" />
+                    <textarea id="manualContent" class="textarea" placeholder="선택한 과목의 과세특 본문 내용을 입력하거나 붙여넣으세요."></textarea>
+                    <button class="btn btn-primary" style="width:100%;" onclick="addManualRecord()">+ 선택한 과목에 과세특 추가하기</button>
+                  </div>
+
+                  <!-- 탭 3: 텍스트 일괄 붙여넣기 -->
                   <div id="tabPanelPaste" style="display:none;">
-                    <div class="form-row">
-                      <input type="text" id="bulkGradeInput" class="input" placeholder="학년/학기" value="2학년 1학기" />
-                      <input type="text" id="bulkDefaultSubj" class="input" placeholder="기본 과목명" value="교과세특" />
-                    </div>
                     <textarea
                       id="bulkPasteArea"
                       class="textarea"
-                      placeholder="과목명: 세특 내용 형태로 붙여넣으면 과목별로 자동 분리됩니다.&#10;예시:&#10;수학I: 지수함수와 로그함수를 활용하여 지진 규모를 분석함.&#10;생명과학I: 카탈레이스 효소 반응 속도 실험을 수행함."
+                      placeholder="과목명: 세특 내용 형태로 붙여넣으면 여러 과목이 한 번에 분리 등록됩니다.&#10;(과목명 없이 붙여넣으면 위에서 선택한 과목으로 합쳐서 등록됩니다)&#10;&#10;예시:&#10;수학I: 지수함수와 로그함수를 활용하여 지진 규모를 분석함.&#10;생명과학I: 카탈레이스 효소 반응 속도 실험을 수행함."
                     ></textarea>
-                    <button class="btn btn-primary" style="width:100%;" onclick="parseAndAddBulkText()">텍스트 자동 분리 및 등록</button>
-                  </div>
-
-                  <!-- 탭 3: 직접 입력 -->
-                  <div id="tabPanelManual" style="display:none;">
-                    <div class="form-row">
-                      <input type="text" id="manualGrade" class="input" placeholder="학년/학기 (예: 1학년 2학기)" />
-                      <input type="text" id="manualSubject" class="input" placeholder="과목명 (예: 통합과학)" />
-                    </div>
-                    <input type="text" id="manualTopic" class="input" style="margin-bottom:8px;" placeholder="핵심 탐구 주제 (비워두면 본문에서 자동 요약)" />
-                    <textarea id="manualContent" class="textarea" placeholder="과세특 본문 내용을 입력하세요."></textarea>
-                    <button class="btn btn-primary" style="width:100%;" onclick="addManualRecord()">과세특 등록하기</button>
+                    <button class="btn btn-primary" style="width:100%;" onclick="parseAndAddBulkText()">텍스트 등록하기</button>
                   </div>
                 </div>
 
+                <!-- 등록된 과세특 통합 열람 & 과목별 모아보기 카드 -->
                 <div class="card">
                   <div class="card-title">
-                    <span>📚 등록된 내 과세특 (<span id="recordCount">0</span>건)</span>
-                    <button class="btn btn-danger-outline" style="padding:4px 9px; font-size:11.5px;" onclick="clearAllRecords()">전체 초기화</button>
+                    <span>📚 내 과세특 통합 열람 (<span id="recordCount">0</span>건 / <span id="subjectCount">0</span>개 과목)</span>
+                    <div style="display:flex; gap:5px;">
+                      <button class="btn btn-outline" style="padding:4px 9px; font-size:11.5px;" onclick="copyMergedText()">📋 전체 합쳐서 복사</button>
+                      <button class="btn btn-danger-outline" style="padding:4px 9px; font-size:11.5px;" onclick="clearAllRecords()">전체 초기화</button>
+                    </div>
                   </div>
+
+                  <!-- 보기 방식 전환: 전체 하나로 합쳐보기(기본) / 과목별 카드 / 개별 목록 -->
+                  <div class="view-mode-bar">
+                    <button class="view-mode-btn active" id="viewBtnMerged" onclick="setViewMode('merged')">📄 전체 내용 합쳐서 보기</button>
+                    <button class="view-mode-btn" id="viewBtnGrouped" onclick="setViewMode('grouped')">🗂️ 과목별 묶어 보기</button>
+                    <button class="view-mode-btn" id="viewBtnCards" onclick="setViewMode('cards')">📋 개별 기록 관리</button>
+                  </div>
+
+                  <!-- 과목 필터 칩 -->
+                  <div class="subject-filter-bar" id="subjectFilterBar"></div>
+
                   <input
                     type="text"
                     id="recordFilterInput"
                     class="input"
                     style="margin-bottom:10px;"
-                    placeholder="등록된 목록 내 과목/키워드 검색..."
+                    placeholder="통합 본문 내 과목명·주제·학술 키워드 검색..."
                     oninput="renderRecordsList()"
                   />
                   <div class="records-scroll" id="recordsContainer"></div>
@@ -385,26 +490,64 @@ jobs:
                   'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
               }
 
-              const STORAGE_KEY = 'seteuk_checker_records_v1';
+              const STORAGE_KEY = 'seteuk_checker_records_v2';
+              const IGNORED_KW_KEY = 'seteuk_checker_ignored_kw_v2';
+              const CUSTOM_KW_KEY = 'seteuk_checker_custom_kw_v2';
 
+              const PRESET_SUBJECTS = [
+                '국어', '문학', '독서', '화법과 작문', '언어와 매체',
+                '수학', '수학I', '수학II', '미적분', '확률과 통계', '기하',
+                '영어', '영어I', '영어II', '영어독해와 작문',
+                '통합사회', '한국사', '사회·문화', '생활과 윤리', '윤리와 사상', '경제', '정치와 법',
+                '통합과학', '물리학I', '물리학II', '화학I', '화학II', '생명과학I', '생명과학II', '지구과학I', '지구과학II',
+                '정보', '인공지능 기초', '진로활동', '자율활동', '동아리활동'
+              ];
+
+              // 생기부 상투적 표현·일반 서술어·무의미 명사 대폭 차단 (쓸모 있는 학술/탐구 키워드만 남기기 위함)
               const STOPWORDS = new Set([
-                '통해','대한','대해','관한','활용','활용한','활용하여','바탕으로','중심으로',
-                '탐구','탐구함','조사','조사함','발표','발표함','보고서','작성','작성함',
-                '이해','이해함','분석','분석함','설명','설명함','제시','제시함','도출',
-                '수업','시간','교과','과목','단원','개념','원리','과정','결과','모습',
-                '보임','보여줌','뛰어남','우수함','적극적','참여','태도','학생','주제',
-                '선정','선정하여','관련','연계','심화','확장','다양한','구체적','논리적'
+                '통해','대한','대해','관한','관하여','활용','활용한','활용하여','바탕','바탕으로','중심','중심으로',
+                '탐구','탐구함','탐구활동','조사','조사함','발표','발표함','보고서','작성','작성함','진행','진행함',
+                '이해','이해함','분석','분석함','설명','설명함','제시','제시함','도출','도출함','수행','수행함',
+                '수업','시간','교과','과목','단원','개념','원리','과정','결과','모습','태도','참여','적극적',
+                '보임','보여줌','뛰어남','우수함','학생','주제','선정','선정하여','관련','연계','심화','확장',
+                '다양한','구체적','논리적','체계적','주도적','창의적','비판적','종합적','효과적','성실히','깊이',
+                '모둠','모둠원','친구','급우','토론','토의','의견','생각','느낌','소감','계기','관심','호기심',
+                '마련','기회','성장','발전','노력','해결','방안','문제','상황','사례','현상','영향','비교',
+                '특징','장단점','필요성','중요성','가능성','한계','한계점','보완','개선','적용','설계','제작',
+                '실험','관찰','측정','자료','정보','내용','부분','경우','이후','기존','최근','현대','사회',
+                '우리','자신','스스로','분야','영역','진로','희망','활동','기여','역할','책임감','협동심',
+                '질문','답변','해석','정리','요약','발견','확인','검증','고찰','탐색','구현','제안','도움',
+                '수준','능력','역량','소양','지식','배경','기초','기본','심층','추가','연결','결합','융합',
+                '학년','학기','교사','선생님','학교','생활','기록부','세특','과세특','교과세특','개인','그룹',
+                '이용','이용한','이용하여','사용','사용한','통한','따른','따라','위해','위한','대비','비해',
+                '가지고','갖고','보이며','보이고','나타냄','드러냄','발휘','발휘함','기름','길러','함양'
+              ]);
+
+              // 핵심 학술/전공 키워드 우선 가중치 사전 (추출 시 최우선 보존)
+              const ACADEMIC_PRIORITY_TERMS = new Set([
+                '인공지능','머신러닝','딥러닝','기계학습','신경망','알고리즘','추천알고리즘','필터버블','확증편향','데이터편향',
+                '베이즈','베이즈정리','조건부확률','위양성','민감도','특이도','유병률','정규분포','표준편차','회귀분석','상관관계',
+                '미분','적분','도함수','편미분','경사하강법','지수함수','로그함수','삼각함수','푸리에','벡터','행렬','프랙탈',
+                '리히터','반감기','데시벨','카탈레이스','아밀레이스','효소','활성화에너지','기질특이성','단백질변성','삼투압',
+                '항상성','신경전달물질','시냅스','활동전위','면역','항체','항원','백신','자가면역','염증반응','세포호흡',
+                '광합성','미토콘드리아','엽록체','유전자','크리스퍼','유전자가위','전사','번역','돌연변이','표적치료제',
+                '지질나노입자','전기영동','중합효소연쇄반응','산화환원','산염기','중화적정','완충용액','르샤틀리에','화학평형',
+                '엔탈피','엔트로피','깁스자유에너지','열역학','전자기유도','패러데이','로렌츠힘','도플러효과','광전효과',
+                '양자역학','반도체','다이오드','트랜지스터','초전도체','신소재','그래핀','탄소나노튜브','배터리','양극재',
+                '탄소중립','온실가스','탄소배출권','탄소국경세','신재생에너지','태양광','수소에너지','기후변화','열섬현상',
+                '엘니뇨','라니냐','판구조론','기회비용','한계효용','수요공급','탄력성','외부효과','정보비대칭','도덕적해이',
+                '역선택','게임이론','내쉬균형','공리주의','의무론','롤스','정의론','사회계약설','트리아제','바이탈사인'
               ]);
 
               const CONCEPT_CLUSTERS = [
-                ['인공지능','ai','머신러닝','딥러닝','기계학습','신경망','알고리즘','챗gpt','생성형'],
-                ['편향','편향성','윤리','공정성','차별','필터버블','확증편향'],
-                ['확률','조건부확률','베이즈','베이즈정리','통계','위양성','거짓양성','진단키트','민감도'],
-                ['효소','카탈레이스','아밀레이스','반응속도','활성화에너지','촉매','기질','온도','ph'],
-                ['유전자','dna','rna','mrna','크리스퍼','유전자가위','백신','지질나노입자','lnp'],
-                ['기후변화','탄소중립','온실가스','탄소배출','신재생에너지','탄소국경세','cbam','esg'],
-                ['지수','로그','지수함수','로그함수','리히터','데시벨','반감기'],
-                ['간호','환자','바이탈','의료','임상','돌봄','트리아제','응급']
+                ['인공지능','ai','머신러닝','딥러닝','기계학습','신경망','알고리즘','추천알고리즘','생성형'],
+                ['편향','편향성','윤리','공정성','차별','필터버블','확증편향','알고리즘윤리'],
+                ['확률','조건부확률','베이즈','베이즈정리','통계','위양성','거짓양성','진단키트','민감도','특이도'],
+                ['효소','카탈레이스','아밀레이스','반응속도','활성화에너지','촉매','기질특이성','단백질변성','ph'],
+                ['유전자','dna','rna','mrna','크리스퍼','유전자가위','백신','지질나노입자','표적치료제'],
+                ['기후변화','탄소중립','온실가스','탄소배출권','신재생에너지','탄소국경세','cbam','esg'],
+                ['지수함수','로그함수','리히터','데시벨','반감기','방사성동위원소'],
+                ['간호','환자','바이탈사인','의료','임상','트리아제','응급','약물동태학']
               ];
 
               const SAMPLE_RECORDS = [
@@ -439,20 +582,51 @@ jobs:
               ];
 
               let records = [];
+              let ignoredKeywords = new Set();
+              let customKeywords = [];
+              let currentViewMode = 'merged'; // 'merged' | 'grouped' | 'cards'
+              let selectedFilterSubject = 'ALL';
 
               window.addEventListener('DOMContentLoaded', () => {
                 try {
-                  const saved = localStorage.getItem(STORAGE_KEY);
+                  const saved = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('seteuk_checker_records_v1');
                   records = saved ? JSON.parse(saved) : [...SAMPLE_RECORDS];
+                  const savedIgnored = localStorage.getItem(IGNORED_KW_KEY);
+                  if (savedIgnored) ignoredKeywords = new Set(JSON.parse(savedIgnored));
+                  const savedCustom = localStorage.getItem(CUSTOM_KW_KEY);
+                  if (savedCustom) customKeywords = JSON.parse(savedCustom);
                 } catch (e) {
                   records = [...SAMPLE_RECORDS];
                 }
+                renderPresetSubjects();
                 setupDragAndDrop();
                 renderAll();
               });
 
               function saveToStorage() {
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                localStorage.setItem(IGNORED_KW_KEY, JSON.stringify(Array.from(ignoredKeywords)));
+                localStorage.setItem(CUSTOM_KW_KEY, JSON.stringify(customKeywords));
+              }
+
+              function renderPresetSubjects() {
+                const container = document.getElementById('presetSubjectChips');
+                const currentVal = (document.getElementById('activeSubjectInput')?.value || '').trim();
+                container.innerHTML = PRESET_SUBJECTS.slice(0, 18).map(subj => `
+                  <button type="button" class="preset-chip ${subj === currentVal ? 'active' : ''}" onclick="selectPresetSubject('${escapeJs(subj)}')">${escapeHtml(subj)}</button>
+                `).join('');
+              }
+
+              function selectPresetSubject(subj) {
+                document.getElementById('activeSubjectInput').value = subj;
+                document.getElementById('currentSubjLabel').textContent = subj;
+                renderPresetSubjects();
+              }
+
+              function syncPresetHighlight() {
+                const val = document.getElementById('activeSubjectInput').value.trim() || '교과세특';
+                document.getElementById('currentSubjLabel').textContent = val;
+                renderPresetSubjects();
               }
 
               function loadSampleData() {
@@ -464,22 +638,74 @@ jobs:
                 });
                 saveToStorage();
                 renderAll();
-                showStatus('예시 과세특 데이터가 불러와졌습니다.');
+                showStatus('예시 과세특 데이터가 과목별로 추가되었습니다.');
               }
 
+              // ★ 쓸모 있는 학술·전공 키워드만 정밀 추출하는 함수
               function extractKeywords(text) {
                 if (!text) return [];
-                const cleaned = text.toLowerCase().replace(/[^\w가-힣\s]/g, ' ').replace(/\s+/g, ' ').trim();
-                const tokens = [];
-                cleaned.split(' ').forEach(tok => {
+                const cleaned = text
+                  .toLowerCase()
+                  .replace(/[^\w가-힣\s·]/g, ' ')
+                  .replace(/·/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim();
+
+                const result = [];
+                const rawTokens = cleaned.split(' ');
+
+                rawTokens.forEach(tok => {
                   if (!tok || tok.length < 2) return;
-                  let stem = tok.replace(/(에서|으로|에게|부터|까지|하는|하고|하여|적인|들의|들을|들이|은|는|이|가|을|를|의|에|와|과|로|도|만|함)$/g, '');
+
+                  let stem = tok.replace(/(에서부터|으로부터|에게서|에서|으로|에게|부터|까지|이라|라고|이란|라는|하는|하고|하며|하여|해서|했던|한|된|되는|되고|되어|적인|적으로|들의|들을|들이|들과|에게|은|는|이|가|을|를|의|에|와|과|로|도|만|함|음|됨)$/g, '');
                   if (stem.length < 2) stem = tok;
-                  if (!STOPWORDS.has(stem) && !STOPWORDS.has(tok) && !/^\d+$/.test(stem)) {
-                    tokens.push(stem);
+
+                  if (/^\d+$/.test(stem) || /^\d+(학년|학기|단원|차시|번|개|명|월|일)$/.test(stem)) return;
+                  if (/(시키|보이|나타나|만들|가지|느끼|배우|익히|기르|길러|살펴보|알아보|찾아보)$/.test(stem)) return;
+                  if (STOPWORDS.has(stem) || STOPWORDS.has(tok) || ignoredKeywords.has(stem)) return;
+
+                  const isPriority = ACADEMIC_PRIORITY_TERMS.has(stem);
+                  const isEngTech = /^[a-z][a-z0-9]{1,12}$/.test(stem);
+                  if (isPriority || isEngTech || stem.length >= 2) {
+                    result.push(stem);
                   }
                 });
-                return Array.from(new Set(tokens));
+
+                const unique = Array.from(new Set(result));
+                unique.sort((a, b) => {
+                  const pa = ACADEMIC_PRIORITY_TERMS.has(a) ? 1 : 0;
+                  const pb = ACADEMIC_PRIORITY_TERMS.has(b) ? 1 : 0;
+                  if (pa !== pb) return pb - pa;
+                  return b.length - a.length;
+                });
+
+                return unique;
+              }
+
+              function ignoreKeyword(kw, evt) {
+                if (evt) evt.stopPropagation();
+                ignoredKeywords.add(kw);
+                customKeywords = customKeywords.filter(k => k !== kw);
+                saveToStorage();
+                renderAll();
+              }
+
+              function resetIgnoredKeywords() {
+                ignoredKeywords.clear();
+                saveToStorage();
+                renderAll();
+                showStatus('숨겼던 키워드가 모두 복원되었습니다.');
+              }
+
+              function addCustomKeyword() {
+                const input = document.getElementById('customKeywordInput');
+                const kw = (input.value || '').trim().toLowerCase().replace(/^#/, '');
+                if (!kw) return;
+                ignoredKeywords.delete(kw);
+                if (!customKeywords.includes(kw)) customKeywords.unshift(kw);
+                input.value = '';
+                saveToStorage();
+                renderAll();
               }
 
               function getCharBigrams(str) {
@@ -503,20 +729,18 @@ jobs:
 
               function evaluateMatch(queryText, record) {
                 const queryKeywords = extractKeywords(queryText);
-                const recordFullText = `${record.subject} ${record.topic} ${record.content}`;
-                const recordKeywords = extractKeywords(recordFullText);
-                const topicKeywords = extractKeywords(record.topic);
+                const recordFullText = `${record.subject} ${record.topic} ${record.content}`.toLowerCase();
+                const recordKeywords = extractKeywords(`${record.topic} ${record.content}`);
 
                 if (queryKeywords.length === 0) return { score: 0, matchedWords: [], clusterMatched: [] };
 
                 const matchedWords = [];
                 const topicMatchedWords = [];
-
                 queryKeywords.forEach(qkw => {
-                  if (recordKeywords.some(rkw => rkw.includes(qkw) || qkw.includes(rkw)) || recordFullText.toLowerCase().includes(qkw)) {
+                  if (recordFullText.includes(qkw) || recordKeywords.some(rkw => rkw.includes(qkw) || qkw.includes(rkw))) {
                     matchedWords.push(qkw);
                   }
-                  if (topicKeywords.some(tkw => tkw.includes(qkw) || qkw.includes(tkw)) || (record.topic || '').toLowerCase().includes(qkw)) {
+                  if ((record.topic || '').toLowerCase().includes(qkw)) {
                     topicMatchedWords.push(qkw);
                   }
                 });
@@ -617,16 +841,16 @@ jobs:
 
                 let verdictClass = 'verdict-safe';
                 let badgeText = '✅ 신규 탐구 가능 (겹치지 않는 새로운 주제입니다)';
-                let summaryText = `등록된 ${records.length}건의 과세특과 비교한 결과, 중복되는 주제가 발견되지 않았습니다.`;
+                let summaryText = `등록된 ${records.length}건의 전 과목 과세특과 통합 비교한 결과, 중복되는 주제가 발견되지 않았습니다.`;
 
                 if (topScore >= 65) {
                   verdictClass = 'verdict-danger';
                   badgeText = '🚨 이미 진행한 주제입니다! (높은 중복 감지)';
-                  summaryText = `기존 과세특(${evaluated[0].record.grade} ${evaluated[0].record.subject})과 핵심 주제가 크게 겹칩니다. 아래의 심화·확장 제안으로 차별화하세요.`;
+                  summaryText = `기존 과세특(${evaluated[0].record.grade} · ${evaluated[0].record.subject})과 핵심 주제가 크게 겹칩니다. 아래의 심화·확장 제안으로 차별화하세요.`;
                 } else if (topScore >= 32) {
                   verdictClass = 'verdict-warn';
                   badgeText = '⚠️ 유사 소재/키워드 이력 있음 (심화 연계 추천)';
-                  summaryText = `관련된 소재나 키워드를 다룬 이력이 있습니다. 이전 탐구에서 한 단계 나아간 '후속 심화 탐구'로 연결해 보세요.`;
+                  summaryText = `관련된 학술 키워드를 다룬 이력이 있습니다. 이전 탐구에서 한 단계 나아간 '후속 심화 탐구'로 연결해 보세요.`;
                 }
 
                 const suggestions = generateDeepeningSuggestions(query, evaluated.slice(0, 2), targetSubj, careerTrack);
@@ -695,11 +919,24 @@ jobs:
               }
 
               function switchTab(mode) {
-                ['file', 'paste', 'manual'].forEach(m => {
+                ['file', 'manual', 'paste'].forEach(m => {
                   const cap = m.charAt(0).toUpperCase() + m.slice(1);
                   document.getElementById('tabBtn' + cap).classList.toggle('active', m === mode);
                   document.getElementById('tabPanel' + cap).style.display = m === mode ? 'block' : 'none';
                 });
+              }
+
+              function setViewMode(mode) {
+                currentViewMode = mode;
+                document.getElementById('viewBtnMerged').classList.toggle('active', mode === 'merged');
+                document.getElementById('viewBtnGrouped').classList.toggle('active', mode === 'grouped');
+                document.getElementById('viewBtnCards').classList.toggle('active', mode === 'cards');
+                renderRecordsList();
+              }
+
+              function setSubjectFilter(subj) {
+                selectedFilterSubject = subj;
+                renderAll();
               }
 
               function setupDragAndDrop() {
@@ -716,22 +953,32 @@ jobs:
                 e.target.value = '';
               }
 
+              function getActiveGradeAndSubject(fallbackName) {
+                const grade = (document.getElementById('activeGradeInput')?.value || '').trim() || '학년미상';
+                const useSelected = document.getElementById('useSelectedSubjectForFile')?.checked;
+                const chosenSubj = (document.getElementById('activeSubjectInput')?.value || '').trim();
+                const subject = (useSelected && chosenSubj) ? chosenSubj : (fallbackName || chosenSubj || '교과세특');
+                return { grade, subject };
+              }
+
               async function processUploadedFiles(fileList) {
                 let totalAdded = 0;
-                showStatus('파일 분석 중...');
+                showStatus('파일 분석 및 과목별 등록 중...');
                 for (const file of fileList) {
                   const ext = file.name.split('.').pop().toLowerCase();
+                  const baseName = file.name.replace(/\.[^.]+$/, '');
+                  const { grade, subject } = getActiveGradeAndSubject(baseName);
                   try {
-                    if (['xlsx', 'xls', 'csv'].includes(ext)) totalAdded += await parseExcelOrCSVFile(file);
-                    else if (ext === 'pdf') totalAdded += await parsePDFFile(file);
-                    else if (ext === 'docx') totalAdded += await parseDocxFile(file);
-                    else if (ext === 'hwpx') totalAdded += await parseHwpxFile(file);
-                    else if (ext === 'hwp') totalAdded += await parseHwpFile(file);
+                    if (['xlsx', 'xls', 'csv'].includes(ext)) totalAdded += await parseExcelOrCSVFile(file, grade, subject);
+                    else if (ext === 'pdf') totalAdded += await parsePDFFile(file, grade, subject);
+                    else if (ext === 'docx') totalAdded += await parseDocxFile(file, grade, subject);
+                    else if (ext === 'hwpx') totalAdded += await parseHwpxFile(file, grade, subject);
+                    else if (ext === 'hwp') totalAdded += await parseHwpFile(file, grade, subject);
                     else if (ext === 'json') {
                       const arr = JSON.parse(await file.text());
-                      if (Array.isArray(arr)) arr.forEach(i => { addRecordObject(i.grade, i.subject, i.topic, i.content); totalAdded++; });
+                      if (Array.isArray(arr)) arr.forEach(i => { addRecordObject(i.grade || grade, i.subject || subject, i.topic, i.content); totalAdded++; });
                     } else {
-                      totalAdded += parseBulkTextToRecords(await file.text(), '파일등록', file.name.replace(/\.[^.]+$/, ''));
+                      totalAdded += parseBulkTextToRecords(await file.text(), grade, subject);
                     }
                   } catch (err) {
                     showStatus(`오류 (${file.name}): ${err.message}`);
@@ -739,12 +986,11 @@ jobs:
                 }
                 saveToStorage();
                 renderAll();
-                showStatus(`✅ 총 ${totalAdded}건의 과세특이 등록되었습니다.`);
+                showStatus(`✅ 총 ${totalAdded}건의 과세특이 등록되어 통합 목록에 합쳐졌습니다.`);
                 if (document.getElementById('topicInput').value) checkTopic();
               }
 
-              // 1) 한글 표준 포맷(.hwpx) 파서 — ZIP 내부 Contents/section*.xml 본문 및 표 추출
-              async function parseHwpxFile(file) {
+              async function parseHwpxFile(file, defaultGrade, defaultSubject) {
                 if (!window.JSZip) throw new Error('JSZip 라이브러리를 불러오지 못했습니다.');
                 const zip = await window.JSZip.loadAsync(await file.arrayBuffer());
                 const sectionFiles = Object.keys(zip.files)
@@ -774,16 +1020,13 @@ jobs:
 
                 const fullText = extractedLines.join('\n');
                 if (!fullText.trim()) throw new Error('HWPX 파일에서 텍스트를 찾지 못했습니다.');
-                return parseBulkTextToRecords(fullText, '한글(HWPX)', file.name.replace(/\.[^.]+$/, ''));
+                return parseBulkTextToRecords(fullText, defaultGrade, defaultSubject);
               }
 
-              // 2) 구형 한글 포맷(.hwp, HWP 5.0 OLE 복합문서) 파서 — BodyText/Section 및 PrvText 디코딩
-              async function parseHwpFile(file) {
+              async function parseHwpFile(file, defaultGrade, defaultSubject) {
                 const buf = new Uint8Array(await file.arrayBuffer());
-
-                // 확장자는 .hwp지만 실제로는 ZIP 기반 .hwpx인 경우 자동 처리
                 if (buf[0] === 0x50 && buf[1] === 0x4B) {
-                  return await parseHwpxFile(file);
+                  return await parseHwpxFile(file, defaultGrade, defaultSubject);
                 }
 
                 if (!window.CFB) throw new Error('HWP 파서(CFB)를 불러오지 못했습니다.');
@@ -797,26 +1040,20 @@ jobs:
                 }
 
                 const paragraphs = [];
-
-                // BodyText/Section0, Section1 ... 스트림에서 HWPTAG_PARA_TEXT (Tag ID 67) 추출
                 const sectionEntries = (cfb.FileIndex || []).filter(e => e.name && /^Section\d+$/i.test(e.name));
                 for (const entry of sectionEntries) {
                   try {
                     let raw = entry.content instanceof Uint8Array ? entry.content : new Uint8Array(entry.content || []);
                     if (!raw.length) continue;
                     if (compressed && window.pako) {
-                      try {
-                        raw = window.pako.inflateRaw(raw);
-                      } catch (e1) {
-                        try { raw = window.pako.inflate(raw); } catch (e2) {}
-                      }
+                      try { raw = window.pako.inflateRaw(raw); }
+                      catch (e1) { try { raw = window.pako.inflate(raw); } catch (e2) {} }
                     }
                     const sectionParas = extractHwpSectionText(raw);
                     if (sectionParas.length) paragraphs.push(...sectionParas);
                   } catch (secErr) {}
                 }
 
-                // PrvText(미리보기 텍스트 UTF-16LE) 보조 추출
                 const prvEntry = window.CFB.find(cfb, 'PrvText');
                 if (paragraphs.length === 0 && prvEntry && prvEntry.content) {
                   const u8 = prvEntry.content instanceof Uint8Array ? prvEntry.content : new Uint8Array(prvEntry.content);
@@ -826,10 +1063,9 @@ jobs:
 
                 const combinedText = paragraphs.join('\n').trim();
                 if (!combinedText) throw new Error('암호화되었거나 텍스트를 추출할 수 없는 HWP 파일입니다.');
-                return parseBulkTextToRecords(combinedText, '한글(HWP)', file.name.replace(/\.[^.]+$/, ''));
+                return parseBulkTextToRecords(combinedText, defaultGrade, defaultSubject);
               }
 
-              // HWP 5.0 레코드 스트림에서 HWPTAG_PARA_TEXT(Tag 67) UTF-16LE 문자열 디코딩
               function extractHwpSectionText(u8) {
                 const result = [];
                 const view = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
@@ -848,7 +1084,6 @@ jobs:
                   }
                   if (offset + size > u8.byteLength) break;
 
-                  // 67 = HWPTAG_PARA_TEXT
                   if (tagId === 67 && size >= 2) {
                     let text = '';
                     let pos = offset;
@@ -858,13 +1093,9 @@ jobs:
                       pos += 2;
                       if (code === 0) break;
                       if (code < 32) {
-                        if ([1, 2, 3, 11, 12, 14, 15, 16, 17, 18, 21, 22, 23].includes(code)) {
-                          pos += 14;
-                        } else if ([4, 5, 6, 7, 8, 9, 19, 20].includes(code)) {
-                          pos += 14;
-                        } else if (code === 10 || code === 13) {
-                          text += '\n';
-                        }
+                        if ([1, 2, 3, 11, 12, 14, 15, 16, 17, 18, 21, 22, 23].includes(code)) pos += 14;
+                        else if ([4, 5, 6, 7, 8, 9, 19, 20].includes(code)) pos += 14;
+                        else if (code === 10 || code === 13) text += '\n';
                         continue;
                       }
                       text += String.fromCharCode(code);
@@ -877,8 +1108,8 @@ jobs:
                 return result;
               }
 
-              async function parseExcelOrCSVFile(file) {
-                if (!window.XLSX) return parseBulkTextToRecords(await file.text(), 'CSV', '교과세특');
+              async function parseExcelOrCSVFile(file, defaultGrade, defaultSubject) {
+                if (!window.XLSX) return parseBulkTextToRecords(await file.text(), defaultGrade, defaultSubject);
                 const wb = window.XLSX.read(await file.arrayBuffer(), { type: 'array' });
                 let added = 0;
                 wb.SheetNames.forEach(name => {
@@ -889,18 +1120,20 @@ jobs:
                       const k = keys.find(key => cands.some(c => key.toLowerCase().includes(c)));
                       return k ? String(row[k]).trim() : '';
                     };
-                    const grade = getCol(['학년', '학기', 'grade']) || name;
-                    const subject = getCol(['과목', '교과', 'subject']) || '교과세특';
+                    const grade = getCol(['학년', '학기', 'grade']) || defaultGrade || name;
+                    const subject = getCol(['과목', '교과', 'subject']) || defaultSubject || '교과세특';
                     const topic = getCol(['주제', '제목', '탐구', 'topic', 'title']);
-                    const content = getCol(['내용', '세특', '세부능력', '특기사항', '본문', 'content']) ||
-                      Object.values(row).map(v => String(v).trim()).filter(v => v.length > 15).join(' ');
-                    if (content || topic) { addRecordObject(grade, subject, topic, content || topic); added++; }
+                    const content = getCol(['내용', '세특', '본문', '특기', 'content', 'desc']) || Object.values(row).join(' ');
+                    if (content.trim().length >= 5) {
+                      addRecordObject(grade, subject, topic, content);
+                      added++;
+                    }
                   });
                 });
                 return added;
               }
 
-              async function parsePDFFile(file) {
+              async function parsePDFFile(file, defaultGrade, defaultSubject) {
                 const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
                 let text = '';
                 for (let i = 1; i <= pdf.numPages; i++) {
@@ -908,31 +1141,39 @@ jobs:
                   const content = await page.getTextContent();
                   text += content.items.map(it => it.str).join(' ') + '\n';
                 }
-                return parseBulkTextToRecords(text, 'PDF등록', '생기부PDF');
+                return parseBulkTextToRecords(text, defaultGrade, defaultSubject);
               }
 
-              async function parseDocxFile(file) {
+              async function parseDocxFile(file, defaultGrade, defaultSubject) {
                 const res = await window.mammoth.extractRawText({ arrayBuffer: await file.arrayBuffer() });
-                return parseBulkTextToRecords(res.value, '워드등록', '과세특문서');
+                return parseBulkTextToRecords(res.value, defaultGrade, defaultSubject);
               }
 
               function parseBulkTextToRecords(rawText, defaultGrade, defaultSubject) {
                 const lines = (rawText || '').split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-                const subjRegex = /^(?:\[([^\]]+)\]|([가-힣A-Za-z0-9\sⅠⅡⅢIV·]{2,18})\s*[:：\-])\s*(.+)$/;
+                const subjRegex = /^(?:\[([^\]]+)\]|([가-힣A-Za-z0-9\sⅠⅡⅢIV·]{2,16})\s*[:：\-])\s*(.+)$/;
                 let currentSubj = defaultSubject || '교과세특';
                 let buffer = [];
                 let added = 0;
 
                 const flush = () => {
                   const combined = buffer.join(' ').trim();
-                  if (combined.length >= 8) { addRecordObject(defaultGrade, currentSubj, '', combined); added++; }
+                  if (combined.length >= 6) {
+                    addRecordObject(defaultGrade, currentSubj, '', combined);
+                    added++;
+                  }
                   buffer = [];
                 };
 
                 lines.forEach(line => {
                   const m = line.match(subjRegex);
-                  if (m) { flush(); currentSubj = (m[1] || m[2]).trim(); buffer.push(m[3].trim()); }
-                  else buffer.push(line);
+                  if (m) {
+                    flush();
+                    currentSubj = (m[1] || m[2]).trim();
+                    buffer.push(m[3].trim());
+                  } else {
+                    buffer.push(line);
+                  }
                 });
                 flush();
                 return added;
@@ -940,27 +1181,28 @@ jobs:
 
               function parseAndAddBulkText() {
                 const text = document.getElementById('bulkPasteArea').value;
-                const grade = document.getElementById('bulkGradeInput').value.trim() || '기타';
-                const subj = document.getElementById('bulkDefaultSubj').value.trim() || '교과세특';
+                const grade = document.getElementById('activeGradeInput').value.trim() || '기타';
+                const subj = document.getElementById('activeSubjectInput').value.trim() || '교과세특';
                 if (!text.trim()) return alert('내용을 입력해 주세요.');
                 const count = parseBulkTextToRecords(text, grade, subj);
                 document.getElementById('bulkPasteArea').value = '';
                 saveToStorage();
                 renderAll();
-                showStatus(`✅ ${count}건의 과세특이 등록되었습니다.`);
+                showStatus(`✅ ${count}건의 과세특이 등록되어 통합 목록에 합쳐졌습니다.`);
               }
 
               function addManualRecord() {
-                const grade = document.getElementById('manualGrade').value.trim() || '기타';
-                const subject = document.getElementById('manualSubject').value.trim() || '교과세특';
+                const grade = document.getElementById('activeGradeInput').value.trim() || '기타';
+                const subject = document.getElementById('activeSubjectInput').value.trim() || '교과세특';
                 const topic = document.getElementById('manualTopic').value.trim();
                 const content = document.getElementById('manualContent').value.trim();
-                if (!content && !topic) return alert('주제나 내용을 입력해 주세요.');
+                if (!content && !topic) return alert('주제나 세특 본문 내용을 입력해 주세요.');
                 addRecordObject(grade, subject, topic, content || topic);
                 document.getElementById('manualTopic').value = '';
                 document.getElementById('manualContent').value = '';
                 saveToStorage();
                 renderAll();
+                showStatus(`✅ [${subject}] 과목에 과세특이 추가되었습니다.`);
               }
 
               function addRecordObject(grade, subject, topic, content) {
@@ -968,7 +1210,7 @@ jobs:
                 let cleanTopic = (topic || '').trim();
                 if (!cleanTopic && cleanContent) {
                   const first = cleanContent.split(/[.?!。]|함\.|음\./)[0].trim();
-                  cleanTopic = first.length > 50 ? first.slice(0, 50) + '...' : first;
+                  cleanTopic = first.length > 52 ? first.slice(0, 52) + '...' : first;
                 }
                 records.unshift({
                   id: 'rec-' + Date.now() + '-' + Math.random().toString(36).slice(2, 6),
@@ -994,27 +1236,155 @@ jobs:
                 document.getElementById('checkResultArea').innerHTML = '';
               }
 
+              function copyMergedText() {
+                if (records.length === 0) return alert('복사할 과세특 내용이 없습니다.');
+                const grouped = groupRecordsBySubject(records);
+                const lines = [];
+                Object.entries(grouped).forEach(([subj, list]) => {
+                  lines.push(`■ [${subj}] (${list.length}건)`);
+                  list.forEach(r => {
+                    lines.push(`- (${r.grade}) ${r.content}`);
+                  });
+                  lines.push('');
+                });
+                navigator.clipboard.writeText(lines.join('\n')).then(() => {
+                  showStatus('📋 전 과목 통합 과세특 내용이 클립보드에 복사되었습니다!');
+                });
+              }
+
+              function groupRecordsBySubject(list) {
+                const map = {};
+                list.forEach(r => {
+                  const key = (r.subject || '교과세특').trim();
+                  if (!map[key]) map[key] = [];
+                  map[key].push(r);
+                });
+                return map;
+              }
+
               function renderAll() {
+                renderSubjectFilterBar();
                 renderRecordsList();
                 renderKeywordCloud();
+              }
+
+              function renderSubjectFilterBar() {
+                const bar = document.getElementById('subjectFilterBar');
+                const grouped = groupRecordsBySubject(records);
+                const subjects = Object.keys(grouped);
+                document.getElementById('subjectCount').textContent = subjects.length;
+
+                if (selectedFilterSubject !== 'ALL' && !grouped[selectedFilterSubject]) {
+                  selectedFilterSubject = 'ALL';
+                }
+
+                let html = `<button class="subj-filter-chip ${selectedFilterSubject === 'ALL' ? 'active' : ''}" onclick="setSubjectFilter('ALL')">전체 통합 (${records.length})</button>`;
+                subjects.forEach(subj => {
+                  const cnt = grouped[subj].length;
+                  const active = selectedFilterSubject === subj ? 'active' : '';
+                  html += `<button class="subj-filter-chip ${active}" onclick="setSubjectFilter('${escapeJs(subj)}')">${escapeHtml(subj)} (${cnt})</button>`;
+                });
+                bar.innerHTML = html;
               }
 
               function renderRecordsList() {
                 document.getElementById('recordCount').textContent = records.length;
                 const filter = (document.getElementById('recordFilterInput')?.value || '').trim().toLowerCase();
-                const filtered = records.filter(r =>
-                  !filter ||
-                  (r.subject || '').toLowerCase().includes(filter) ||
-                  (r.topic || '').toLowerCase().includes(filter) ||
-                  (r.content || '').toLowerCase().includes(filter)
-                );
+
+                const filtered = records.filter(r => {
+                  if (selectedFilterSubject !== 'ALL' && r.subject !== selectedFilterSubject) return false;
+                  if (!filter) return true;
+                  return (
+                    (r.subject || '').toLowerCase().includes(filter) ||
+                    (r.grade || '').toLowerCase().includes(filter) ||
+                    (r.topic || '').toLowerCase().includes(filter) ||
+                    (r.content || '').toLowerCase().includes(filter)
+                  );
+                });
 
                 const container = document.getElementById('recordsContainer');
                 if (filtered.length === 0) {
-                  container.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">등록된 과세특이 없습니다.</div>`;
+                  container.innerHTML = `<div style="text-align:center; padding:24px; color:var(--text-muted); font-size:13px;">표시할 과세특 기록이 없습니다.</div>`;
                   return;
                 }
 
+                // 1) 전체 내용을 하나로 합쳐서 보는 통합 문서 뷰 (기본)
+                if (currentViewMode === 'merged') {
+                  const grouped = groupRecordsBySubject(filtered);
+                  container.innerHTML = `
+                    <div class="merged-doc-box">
+                      <div style="font-size:12px; color:#1e3a8a; font-weight:800; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>📑 과목별로 등록한 과세특 통합 본문 (${Object.keys(grouped).length}개 과목 · 총 ${filtered.length}건)</span>
+                      </div>
+                      ${Object.entries(grouped).map(([subj, list]) => {
+                        const combinedParagraph = list.map(r => r.content).join(' ');
+                        const subjKws = extractKeywords(combinedParagraph).slice(0, 6);
+                        return `
+                          <div class="merged-subj-section">
+                            <div class="merged-subj-header">
+                              <div class="merged-subj-title">
+                                <span class="tag">${escapeHtml(subj)}</span>
+                                <span style="font-size:12px; color:var(--text-muted); font-weight:600;">${list.length}건 합쳐짐</span>
+                              </div>
+                              <button class="btn btn-outline" style="padding:2px 8px; font-size:11px;" onclick="selectPresetSubject('${escapeJs(subj)}')">+ 이 과목에 추가</button>
+                            </div>
+                            <div class="match-content" style="color:#1e293b; line-height:1.7;">
+                              ${list.map(r => `
+                                <div class="merged-entry">
+                                  <span class="tag tag-grade" style="margin-right:4px;">${escapeHtml(r.grade)}</span>
+                                  <strong style="color:#0f172a; cursor:pointer;" onclick="quickCheck('${escapeJs(r.topic)}')">[${escapeHtml(r.topic)}]</strong>
+                                  <span> ${escapeHtml(r.content)}</span>
+                                  <button class="record-del" style="margin-left:6px;" onclick="deleteRecord('${r.id}')">삭제</button>
+                                </div>
+                              `).join('')}
+                            </div>
+                            <div class="keywords-row" style="margin-top:8px;">
+                              ${subjKws.map(k => `
+                                <span class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">
+                                  #${escapeHtml(k)}
+                                  <span class="kw-chip-del" title="이 키워드 제외" onclick="ignoreKeyword('${escapeJs(k)}', event)">✕</span>
+                                </span>
+                              `).join('')}
+                            </div>
+                          </div>
+                        `;
+                      }).join('')}
+                    </div>
+                  `;
+                  return;
+                }
+
+                // 2) 과목별 문단 통합 뷰
+                if (currentViewMode === 'grouped') {
+                  const grouped = groupRecordsBySubject(filtered);
+                  container.innerHTML = Object.entries(grouped).map(([subj, list]) => {
+                    const grades = Array.from(new Set(list.map(r => r.grade))).join(', ');
+                    const mergedText = list.map(r => r.content).join('\n\n');
+                    const subjKws = extractKeywords(mergedText).slice(0, 7);
+                    return `
+                      <div class="record-card">
+                        <div class="match-meta">
+                          <div>
+                            <span class="tag">${escapeHtml(subj)}</span>
+                            <span class="tag tag-grade">${escapeHtml(grades)} (${list.length}건 통합)</span>
+                          </div>
+                        </div>
+                        <div class="match-content" style="color:#0f172a; margin-top:6px;">${escapeHtml(mergedText)}</div>
+                        <div class="keywords-row">
+                          ${subjKws.map(k => `
+                            <span class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">
+                              #${escapeHtml(k)}
+                              <span class="kw-chip-del" onclick="ignoreKeyword('${escapeJs(k)}', event)">✕</span>
+                            </span>
+                          `).join('')}
+                        </div>
+                      </div>
+                    `;
+                  }).join('');
+                  return;
+                }
+
+                // 3) 개별 카드 관리 뷰
                 container.innerHTML = filtered.map(rec => {
                   const kws = extractKeywords(rec.topic + ' ' + rec.content).slice(0, 5);
                   return `
@@ -1029,21 +1399,55 @@ jobs:
                       <div class="match-title" style="cursor:pointer;" onclick="quickCheck('${escapeJs(rec.topic)}')">${escapeHtml(rec.topic)}</div>
                       <div class="match-content">${escapeHtml(rec.content)}</div>
                       <div class="keywords-row">
-                        ${kws.map(k => `<button class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">#${escapeHtml(k)}</button>`).join('')}
+                        ${kws.map(k => `
+                          <span class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">
+                            #${escapeHtml(k)}
+                            <span class="kw-chip-del" onclick="ignoreKeyword('${escapeJs(k)}', event)">✕</span>
+                          </span>
+                        `).join('')}
                       </div>
                     </div>
                   `;
                 }).join('');
               }
 
+              // ★ 쓸모 있는 키워드만 점수화하여 상위 노출
               function renderKeywordCloud() {
-                const freq = {};
-                records.forEach(r => extractKeywords(`${r.topic} ${r.content}`).forEach(k => { freq[k] = (freq[k] || 0) + 1; }));
-                const top = Object.entries(freq).sort((a, b) => b[1] - a[1]).slice(0, 24);
+                const scoreMap = {};
+                const countMap = {};
+
+                customKeywords.forEach(kw => {
+                  scoreMap[kw] = 999;
+                  countMap[kw] = (countMap[kw] || 1);
+                });
+
+                records.forEach(r => {
+                  const kws = extractKeywords(`${r.topic} ${r.content}`);
+                  const topicKws = new Set(extractKeywords(r.topic));
+                  kws.forEach(k => {
+                    countMap[k] = (countMap[k] || 0) + 1;
+                    let weight = 1;
+                    if (ACADEMIC_PRIORITY_TERMS.has(k)) weight += 3;
+                    if (topicKws.has(k)) weight += 2;
+                    if (k.length >= 3) weight += 1;
+                    scoreMap[k] = (scoreMap[k] || 0) + weight;
+                  });
+                });
+
+                const top = Object.keys(scoreMap)
+                  .filter(k => !ignoredKeywords.has(k))
+                  .sort((a, b) => scoreMap[b] - scoreMap[a])
+                  .slice(0, 26);
+
                 const cloud = document.getElementById('keywordCloud');
                 cloud.innerHTML = top.length
-                  ? top.map(([k, c]) => `<button class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">#${escapeHtml(k)} (${c})</button>`).join('')
-                  : `<span style="font-size:12.5px; color:var(--text-muted);">과세특을 등록하면 주요 키워드가 표시됩니다.</span>`;
+                  ? top.map(k => `
+                      <span class="kw-chip" onclick="quickCheck('${escapeJs(k)}')">
+                        #${escapeHtml(k)} (${countMap[k] || 1})
+                        <span class="kw-chip-del" title="쓸모없는 키워드 숨기기" onclick="ignoreKeyword('${escapeJs(k)}', event)">✕</span>
+                      </span>
+                    `).join('')
+                  : `<span style="font-size:12.5px; color:var(--text-muted);">과세특을 등록하면 핵심 학술 키워드만 선별되어 표시됩니다.</span>`;
               }
 
               function exportBackupJSON() {
